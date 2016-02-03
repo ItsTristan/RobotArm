@@ -12,18 +12,20 @@ import lejos.utility.Delay;
 
 public class Main {
 	// A is the inner-most, B is the outer
-		static RegulatedMotor A = new EV3LargeRegulatedMotor(MotorPort.A);
-		static RegulatedMotor B = new EV3LargeRegulatedMotor(MotorPort.B);
 		private static EV3TouchSensor touchSensor;
 		
 	public static void main(String[] args) {
+		while (true){
 		// maybe make menu on brick??
 		//doAngleBWlines(); 
 		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
-		Point test_point = new Point(100,100);
+		Point test_point = new Point(200,80);
 		testInverse2D(test_point);
+		
+		Button.waitForAnyPress();
+		}
 	}
 	
 	/** Waits for two target points selected and calculates midpoint
@@ -43,8 +45,14 @@ public class Main {
 	 * @return 
 	 */
 	private static void testInverse2D(Point target) {
-		int[] angles = Kinematics.inverseAnalyticKinematics(target);
-		RobotController.rotateTo(angles);
+		RobotController.moveTo(target);
+		
+		//somewhere x and y are switched
+		Point end = RobotController.getLocation();
+		int[] theta = RobotController.getJointAngles();
+		System.out.format("target= (%d,%d) \nreal= (%d,%d) \n th = [%d, %d]", 
+				target.x, target.y, end.x, end.y, theta[0], theta[1]);
+		
 	}
 	
 	/**waits for two points selected by pressing sensor button and 
@@ -75,7 +83,7 @@ public class Main {
 		while (pnum < num_points){
 			touchSensor.getTouchMode().fetchSample(sample, 0);  
 			if (sample[0] == 1){
-				points[pnum] = Kinematics.forwardKinematics(new int[]{A.getTachoCount(), B.getTachoCount()});
+				points[pnum] = RobotController.getLocation();
 				System.out.format("point%d= %d,%d\n", pnum, points[pnum].x, points[pnum].y);
 				pnum++;
 			}
@@ -93,17 +101,15 @@ public class Main {
 
 	private static void doForward2DbyAngle(int angleA, int angleB) {
 		//print starting location
-		Point p = Kinematics.forwardKinematics(new int[]{A.getTachoCount(), B.getTachoCount()});
+		Point p = RobotController.getLocation();
 		System.out.format("x = %d \ny= %d\n", p.x,p.y);
-		angleA = 2*angleA; // for use of gears
-		A.rotateTo(angleA);
-		B.rotateTo(angleB);
+		
+		RobotController.rotateTo(new int[] {angleA, angleB});
 		Delay.msDelay(200);
 		
-		int At = A.getTachoCount();
-		int Bt = B.getTachoCount();
-		p = Kinematics.forwardKinematics(new int[]{At, Bt});
-		System.out.format("x = %d \ny= %d \nTachoA: %d \nTachoB: %d\n", p.x,p.y, At,Bt );
+		int[] theta = RobotController.getJointAngles();
+		p = Kinematics.forwardKinematics(new int[]{theta[0], theta[1]});
+		System.out.format("x = %d \ny= %d \nTachoA: %d \nTachoB: %d\n", p.x,p.y,theta[0], theta[1] );
 		Button.waitForAnyPress();
 	}
 
