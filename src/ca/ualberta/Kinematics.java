@@ -26,6 +26,27 @@ public class Kinematics {
 	}
 	
 	/**
+	 * Given 3 points of two intersecting lines find the angle they intersect at
+	 * @param c intersecting point
+	 * @param a point from first line
+	 * @param b poit from other line
+	 * @return angle between the two lines at point c
+	 */
+	public static int getAngleBWlines(Point c, Point a, Point b){
+		// get absolute side lengths
+		// sqrt((x2-x1)^2 + (y2-y1)^2)
+		double AC = Math.sqrt((Math.pow(c.x - a.x, 2) +  Math.pow(c.y - a.y, 2)));
+		double CB = Math.sqrt((Math.pow(b.x - c.x, 2) +  Math.pow(b.y - c.y, 2)));
+		double AB = Math.sqrt((Math.pow(b.x - a.x, 2) +  Math.pow(b.y - a.y, 2)));
+		
+		// law of cosines to find angle at point corner c
+		// c^2 = a^2 + b^2 - 2abcos(C) where C is angle opposite AB edge at point c
+		double cosAngle = (Math.pow(AC, 2) + Math.pow(CB, 2) - Math.pow(AB, 2)) / 2*AC*CB;
+		int angle = (int)Math.acos(cosAngle);
+		return angle;
+	}
+	
+	/**
 	 * Given a point, computes and returns the joint angles
 	 * required to achieve the target
 	 * @param target
