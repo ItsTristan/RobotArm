@@ -15,7 +15,7 @@ public class Kinematics {
 	 * @return
 	 */
 	public static Point forwardKinematics(int[] theta) {
-		double thetaA = Math.toRadians(theta[0])/2;
+		double thetaA = Math.toRadians(theta[0]);
 		double thetaB = Math.toRadians(theta[1]);
 		int x = (int) (link_lengths[0]*Math.cos(thetaA) + 
 						link_lengths[1]*Math.cos(thetaA + thetaB));
