@@ -8,15 +8,16 @@ import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
 
 public class RobotController {
-
+	
 	private static RegulatedMotor m_motorA;
 	private static RegulatedMotor m_motorB;
 	private static RegulatedMotor m_motorC;
 
-	public static final int motor_speed = 60;
-	public static final int motor_accel = 20;
+	private static final int defaultDelay = 300;
+	private static final int motor_speed = 60;
+	private static final int motor_accel = 20;
 	
-	public static final double[] gear_ratios = {15d/30d, 1d};
+	private static final double[] gear_ratios = {15d/30d, 1d};
 	
 	/***
 	 * Moves the end effector to the point (x,y)
@@ -32,16 +33,31 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveTo(Point p) {
-		return;
+		moveAnalytic(p);
+	}
+	
+	/**
+	 * Moves the end effector to the point p
+	 * using an analytic solution
+	 * @param p
+	 */
+	public static void moveAnalytic(Point p) {
+		int[] theta = Kinematics.inverseAnalyticKinematics(p);
+		rotateTo(theta);
+	}
+	
+	public static void rotateTo(int[] theta) {
+		rotateTo(theta, defaultDelay);
 	}
 	
 	/**
 	 * Rotates the joints to the given angles, returning
 	 * the point of the end effector
 	 * @param theta
+	 * @param delay
 	 * @return
 	 */
-	public static void rotateTo(int[] theta) {
+	public static void rotateTo(int[] theta, int delay) {
 		RegulatedMotor motorA = getMotorA();
 		RegulatedMotor motorB = getMotorB();	
 
@@ -54,7 +70,7 @@ public class RobotController {
 		motorA.rotateTo((int) (theta[0] / gear_ratios[0]));
 		motorB.rotateTo((int) (theta[1] / gear_ratios[1]));
 		
-		Delay.msDelay(300);
+		Delay.msDelay(delay);
 	}
 	
 	/**
