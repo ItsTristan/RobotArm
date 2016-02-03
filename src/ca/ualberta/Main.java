@@ -18,7 +18,7 @@ public class Main {
 		
 	public static void main(String[] args) {
 		// maybe make menu on brick??
-		doAngleBWlines(); //NEED TO TEST
+		doAngleBWlines(); //NEED TO DEBUG
 		//getDistance(); //NEED TO TEST
 		//testFWDByHand(); //NEED TO TEST
 		//doForward2DbyAngle(90, 90);
@@ -45,7 +45,7 @@ public class Main {
 		Button.waitForAnyPress();
 		return distance;
 	}
-	
+	//NEEDS DEBUGGING!!!
 	private static void doAngleBWlines() {
 		Point[] cba = new Point[3];
 		int points = 0;
