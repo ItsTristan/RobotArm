@@ -36,14 +36,18 @@ public class Kinematics {
 	public static int getAngleBWlines(Point c, Point a, Point b){
 		// get absolute side lengths
 		// sqrt((x2-x1)^2 + (y2-y1)^2)
-		double AC = Math.sqrt((Math.pow(c.x - a.x, 2) +  Math.pow(c.y - a.y, 2)));
-		double CB = Math.sqrt((Math.pow(b.x - c.x, 2) +  Math.pow(b.y - c.y, 2)));
-		double AB = Math.sqrt((Math.pow(b.x - a.x, 2) +  Math.pow(b.y - a.y, 2)));
+//		double AC = Math.sqrt((Math.pow(c.x - a.x, 2) +  Math.pow(c.y - a.y, 2)));
+//		double CB = Math.sqrt((Math.pow(b.x - c.x, 2) +  Math.pow(b.y - c.y, 2)));
+//		double AB = Math.sqrt((Math.pow(b.x - a.x, 2) +  Math.pow(b.y - a.y, 2)));
+		
+		double AB = a.distance(b);
+		double CA = c.distance(a);
+		double CB = c.distance(b);
 		
 		// law of cosines to find angle at point corner c
 		// c^2 = a^2 + b^2 - 2abcos(C) where C is angle opposite AB edge at point c
-		double cosAngle = (Math.pow(AC, 2) + Math.pow(CB, 2) - Math.pow(AB, 2)) / 2*AC*CB;
-		int angle = (int)Math.acos(cosAngle);
+		double cosAngle = (CA*CA +  CB*CB - AB*AB) / (2*CA*CB);
+		int angle = (int)Math.toDegrees(Math.acos(cosAngle));
 		return angle;
 	}
 	
@@ -53,8 +57,15 @@ public class Kinematics {
 	 * @param target
 	 * @return final theta values
 	 */
-	public static int[] inverseKinematics(Point target) {
-		return null;
+	public static int[] inverseAnalyticKinematics(Point target) {
+		int[] angles = new int[2]; 
+			double xsqr_ysqr = target.x*target.x + target.y*target.y;
+			angles[1] = (int) Math.toDegrees(Math.acos( ( xsqr_ysqr - link_lengths[0]*link_lengths[0] - link_lengths[1]*link_lengths[1])
+							/ (2*link_lengths[0]*link_lengths[1]) ));
+			angles[0] = (int) Math.toDegrees(Math.asin((link_lengths[1]*Math.sin(angles[1]))
+											/(Math.sqrt(xsqr_ysqr)))
+											+ Math.atan2(target.y, target.x));
+		return angles;
 	}
 	
 	/**
