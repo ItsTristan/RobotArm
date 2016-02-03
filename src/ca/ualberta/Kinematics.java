@@ -5,7 +5,8 @@ import java.io.File;
 
 public class Kinematics {
 	
-	public static final int[] joint_lengths = {10, 10};	// the length of each joint in mm.
+	
+	public static final int[] link_lengths = {135, 105};	// the length of each joint in mm.
 	
 	/**
 	 * Given a set of theta values for the joint angles, returns
@@ -13,8 +14,15 @@ public class Kinematics {
 	 * @param theta
 	 * @return
 	 */
-	public static Point forwardKinematics(int theta[]) {
-		return null;
+	public static Point forwardKinematics(int[] theta) {
+		double thetaA = Math.toRadians(theta[0])/2;
+		double thetaB = Math.toRadians(theta[1]);
+		int x = (int) (link_lengths[0]*Math.cos(thetaA) + 
+						link_lengths[1]*Math.cos(thetaA + thetaB));
+		int y = (int) (link_lengths[0]*Math.sin(thetaA) + 
+						link_lengths[1]*Math.sin(thetaA + thetaB));
+		Point p = new Point(x,y);
+		return p;
 	}
 	
 	/**
