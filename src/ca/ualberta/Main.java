@@ -18,9 +18,10 @@ public class Main {
 		
 	public static void main(String[] args) {
 		// maybe make menu on brick??
-		doAngleBWlines(); //NEED TO DEBUG
+			//DEBUG GET ANGLE IN KINEMATICS
+		doAngleBWlines(); //NEED TO TEST more
 		//getDistance(); //NEED TO TEST
-		//testFWDByHand(); //NEED TO TEST
+		//testFWDByHand(); //NEED TO TEST and make use sensor
 		//doForward2DbyAngle(90, 90);
 	}
 	
@@ -31,7 +32,7 @@ public class Main {
 			touchSensor = new EV3TouchSensor(SensorPort.S1);
 		}
 		float[] sample = new float[touchSensor.sampleSize()];
-		while (pnum <= 1){
+		while (pnum <= 2){
 			touchSensor.getTouchMode().fetchSample(sample, 0);  
 			if (sample[0] == 1){
 				points[pnum] = Kinematics.forwardKinematics(new int[]{A.getTachoCount(), B.getTachoCount()});
@@ -45,7 +46,7 @@ public class Main {
 		Button.waitForAnyPress();
 		return distance;
 	}
-	//NEEDS DEBUGGING!!!
+	
 	private static void doAngleBWlines() {
 		Point[] cba = new Point[3];
 		int points = 0;
@@ -54,11 +55,14 @@ public class Main {
 		}
 		float[] sample = new float[touchSensor.sampleSize()];
 		while (points <= 2){
-			touchSensor.getTouchMode().fetchSample(sample, 0);  
-			if (sample[0] == 1){
+			touchSensor.getTouchMode().fetchSample(sample, 0); 
+			//System.out.format("sample= %.2f\n", sample[0]);
+			if (sample[0] == 1.0){
 				cba[points] = Kinematics.forwardKinematics(new int[]{A.getTachoCount(), B.getTachoCount()});
+				System.out.format("point%d= %d,%d\n", points, cba[points].x, cba[points].y);
 				points++;
 			}
+			Delay.msDelay(500);
 		}
 		int angle = Kinematics.getAngleBWlines(cba[0], cba[1], cba[2]);
 		System.out.format("inter ang= %d \n", angle);

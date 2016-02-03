@@ -32,6 +32,7 @@ public class Kinematics {
 	 * @param b poit from other line
 	 * @return angle between the two lines at point c
 	 */
+		//NEEDS DEBUGGING
 	public static int getAngleBWlines(Point c, Point a, Point b){
 		// get absolute side lengths
 		// sqrt((x2-x1)^2 + (y2-y1)^2)
