@@ -19,15 +19,38 @@ public class Main {
 	public static void main(String[] args) {
 		// maybe make menu on brick??
 		//doAngleBWlines(); 
-		getDistance(); 
+		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
-		
-		Point test = new Point(100,100);
-		int[] angles = Kinematics.inverseAnalyticKinematics(test);
-		
+		Point test_point = new Point(100,100);
+		testInverse2D(test_point);
 	}
 	
+	/** Waits for two target points selected and calculates midpoint
+	 * then moves robot end effector to the midpoint
+	 * @return 
+	 */
+	private static void moveToMidpoint(){
+		Point[] points = getSensorPoints(2);
+		int x_avg = (points[0].x + points[1].x)/2;
+		int y_avg = (points[0].y + points[1].y)/2;
+		Point midpoint = new Point(x_avg, y_avg);
+		testInverse2D(midpoint);
+	}
+	
+	/** given target point moves robot to that location
+	 * @param target point to move to
+	 * @return 
+	 */
+	private static void testInverse2D(Point target) {
+		int[] angles = Kinematics.inverseAnalyticKinematics(target);
+		RobotController.rotateTo(angles);
+	}
+	
+	/**waits for two points selected by pressing sensor button and 
+	 * calculates distance between them
+	 * @return distance between the points
+	 */
 	private static int getDistance(){
 		Point[] points = getSensorPoints(2);
 		int distance = (int) points[0].distance(points[1]);
@@ -37,11 +60,11 @@ public class Main {
 		return distance;
 	}
 	
-/**
- * Waits for sensor presses and gets the point where it was pressed
- * @param num_points is number of points/presses to wait for
- * @return points
- */
+	/**
+	 * Waits for sensor presses and gets the point where it was pressed
+	 * @param num_points is number of points/presses to wait for
+	 * @return points
+	 */
 	private static Point[] getSensorPoints(int num_points) {
 		Point[] points = new Point[num_points];
 		int pnum = 0;
