@@ -12,22 +12,53 @@ import lejos.utility.Delay;
 
 public class Main {
 	// A is the inner-most, B is the outer
-		static RegulatedMotor A = new EV3LargeRegulatedMotor(MotorPort.A);
-		static RegulatedMotor B = new EV3LargeRegulatedMotor(MotorPort.B);
 		private static EV3TouchSensor touchSensor;
 		
 	public static void main(String[] args) {
+		while (true){
 		// maybe make menu on brick??
 		//doAngleBWlines(); 
-		getDistance(); 
+		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
+		Point test_point = new Point(200,80);
+		testInverse2D(test_point);
 		
-		Point test = new Point(100,100);
-		int[] angles = Kinematics.inverseAnalyticKinematics(test);
+		Button.waitForAnyPress();
+		}
+	}
+	
+	/** Waits for two target points selected and calculates midpoint
+	 * then moves robot end effector to the midpoint
+	 * @return 
+	 */
+	private static void moveToMidpoint(){
+		Point[] points = getSensorPoints(2);
+		int x_avg = (points[0].x + points[1].x)/2;
+		int y_avg = (points[0].y + points[1].y)/2;
+		Point midpoint = new Point(x_avg, y_avg);
+		testInverse2D(midpoint);
+	}
+	
+	/** given target point moves robot to that location
+	 * @param target point to move to
+	 * @return 
+	 */
+	private static void testInverse2D(Point target) {
+		RobotController.moveTo(target);
+		
+		//somewhere x and y are switched
+		Point end = RobotController.getLocation();
+		int[] theta = RobotController.getJointAngles();
+		System.out.format("target= (%d,%d) \nreal= (%d,%d) \n th = [%d, %d]", 
+				target.x, target.y, end.x, end.y, theta[0], theta[1]);
 		
 	}
 	
+	/**waits for two points selected by pressing sensor button and 
+	 * calculates distance between them
+	 * @return distance between the points
+	 */
 	private static int getDistance(){
 		Point[] points = getSensorPoints(2);
 		int distance = (int) points[0].distance(points[1]);
@@ -37,11 +68,11 @@ public class Main {
 		return distance;
 	}
 	
-/**
- * Waits for sensor presses and gets the point where it was pressed
- * @param num_points is number of points/presses to wait for
- * @return points
- */
+	/**
+	 * Waits for sensor presses and gets the point where it was pressed
+	 * @param num_points is number of points/presses to wait for
+	 * @return points
+	 */
 	private static Point[] getSensorPoints(int num_points) {
 		Point[] points = new Point[num_points];
 		int pnum = 0;
@@ -52,7 +83,7 @@ public class Main {
 		while (pnum < num_points){
 			touchSensor.getTouchMode().fetchSample(sample, 0);  
 			if (sample[0] == 1){
-				points[pnum] = Kinematics.forwardKinematics(new int[]{A.getTachoCount(), B.getTachoCount()});
+				points[pnum] = RobotController.getLocation();
 				System.out.format("point%d= %d,%d\n", pnum, points[pnum].x, points[pnum].y);
 				pnum++;
 			}
@@ -70,17 +101,15 @@ public class Main {
 
 	private static void doForward2DbyAngle(int angleA, int angleB) {
 		//print starting location
-		Point p = Kinematics.forwardKinematics(new int[]{A.getTachoCount(), B.getTachoCount()});
+		Point p = RobotController.getLocation();
 		System.out.format("x = %d \ny= %d\n", p.x,p.y);
-		angleA = 2*angleA; // for use of gears
-		A.rotateTo(angleA);
-		B.rotateTo(angleB);
+		
+		RobotController.rotateTo(new int[] {angleA, angleB});
 		Delay.msDelay(200);
 		
-		int At = A.getTachoCount();
-		int Bt = B.getTachoCount();
-		p = Kinematics.forwardKinematics(new int[]{At, Bt});
-		System.out.format("x = %d \ny= %d \nTachoA: %d \nTachoB: %d\n", p.x,p.y, At,Bt );
+		int[] theta = RobotController.getJointAngles();
+		p = Kinematics.forwardKinematics(new int[]{theta[0], theta[1]});
+		System.out.format("x = %d \ny= %d \nTachoA: %d \nTachoB: %d\n", p.x,p.y,theta[0], theta[1] );
 		Button.waitForAnyPress();
 	}
 

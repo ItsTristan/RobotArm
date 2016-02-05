@@ -13,7 +13,7 @@ public class RobotController {
 	private static RegulatedMotor m_motorB;
 	private static RegulatedMotor m_motorC;
 
-	private static final int defaultDelay = 300;
+	private static final int defaultDelay = 500;
 	private static final int motor_speed = 60;
 	private static final int motor_accel = 20;
 	
