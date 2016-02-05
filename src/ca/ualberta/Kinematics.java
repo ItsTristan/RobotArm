@@ -3,6 +3,9 @@ package ca.ualberta;
 import java.awt.Point;
 import java.io.File;
 
+import org.jblas.DoubleMatrix;
+import org.jblas.Solve;
+
 public class Kinematics {
 	
 	
@@ -66,6 +69,55 @@ public class Kinematics {
 											/(Math.sqrt(xsqr_ysqr)))
 											+ Math.atan2(target.y, target.x));
 		return angles;
+	}
+	
+	public static int[] inverseNumericalKinematics(Point target, int[] theta0) {
+		double[] theta = new double[theta0.length];
+		int[] round = new int[theta0.length];
+		
+		// Copy theta0 to angles
+		for (int j = 0; j < theta.length; j++)
+			theta[j] = (double)Math.toRadians(theta0[j]);
+
+		DoubleMatrix angles = new DoubleMatrix(theta);
+		
+		for (int i = 0; i < 100; i++) {
+			// Get the error term
+			round = angles.mul(180d/Math.PI).toIntArray();
+			Point actual = forwardKinematics(round);
+			DoubleMatrix error = new DoubleMatrix(
+					new double[]{target.x - actual.x, target.y - actual.y});
+
+			// If error is small enough, stop
+			if (error.norm2() <= Math.sqrt(TestKinematics.dist_thresh)) {
+				break;
+			}
+			
+			// Compute the Jacobian
+			// Convention: Jac[row][col]
+			double[][] Jac = new double[2][2];
+			// dx/d0
+			Jac[0][0] = -link_lengths[0]*Math.sin(angles.get(0))
+					-link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
+			Jac[0][1] = -link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
+			
+			Jac[1][0] = link_lengths[0]*Math.cos(angles.get(0))
+					+link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
+			Jac[1][1] = link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
+			
+			DoubleMatrix J = new DoubleMatrix(Jac);
+			
+			// Solve for delta Theta
+			DoubleMatrix delta = Solve.solve(J, error);
+			
+			// Update the angles
+			angles = angles.add(delta);
+			
+			// Repeat a few times to try to reduce the error.
+		}
+
+		// Round the result
+		return angles.mul(180d/Math.PI).toIntArray();
 	}
 	
 	/**

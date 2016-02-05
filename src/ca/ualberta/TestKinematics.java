@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class TestKinematics extends Kinematics {
 
-	private int dist_thresh = 3;	// Maximum number of mm to be off by in inverse kinematics
+	public static final int dist_thresh = 25;	// Maximum number of mm to be off by in inverse kinematics
 
 	final int L1 = link_lengths[0], L2 = link_lengths[1];
 	
@@ -23,6 +23,8 @@ public class TestKinematics extends Kinematics {
 	public void testForwardKinematics() {
 	
 		// All points verified with basic geometry
+		// Assumes default position is [240, 0]
+		// and 
 		
 		Point actual;
 		
@@ -81,7 +83,7 @@ public class TestKinematics extends Kinematics {
 		assertInverse(new Point(240,0), new int[]{0,0}, new int[]{10,10});
 
 		// Base at 90
-		assertInverse(new Point(0,240), new int[]{90,0}, new int[]{70,15});
+		assertInverse(new Point(0,240), new int[]{90,0}, new int[]{82,10});
 		
 		// Both at 45/45 (positive x, positive y)
 		assertInverse(new Point(L1*scale/root2, L2+L1*scale/root2),
