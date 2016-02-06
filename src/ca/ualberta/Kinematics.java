@@ -71,15 +71,18 @@ public class Kinematics {
 		double r = target.x*target.x + target.y*target.y;
 		double l1 = link_lengths[0];
 		double l2 = link_lengths[1];
-		
+		// if absolute value of r-l1*l1-l2*l2 is greater than one---> NAN
+		// so only valid for points in: 30 < sqrt(x^2+y^2) < 240
 		angles[1] = Math.acos((r-l1*l1-l2*l2) / (2*l1*l2));
 		angles[0] = Math.asin(-l2*Math.sin(angles[1])/(Math.sqrt(r)))
 										+ Math.atan2(target.y, target.x);
+		System.out.format("angles[1]= %f \nangles[0]= %f\n", angles[1], angles[0]);
 		
 		int[] theta = new int[angles.length];
 		for (int i = 0; i < theta.length; i++) {
 			theta[i] = (int) Math.round(Math.toDegrees(angles[i]));
 		}
+		System.out.format("theta[1]= %d \ntheta[0]= %d\n", theta[1], theta[0]);
 		return theta;
 	}
 	

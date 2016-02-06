@@ -45,7 +45,7 @@ public class Main {
 		//somewhere x and y are switched
 		Point3D end = RobotController.getLocation();
 		int[] theta = RobotController.getJointAngles();
-		System.out.format("target= (%d,%d) \nreal= (%d,%d) \n th = [%d, %d]", 
+		System.out.format("target= (%f,%f) \nreal= (%f,%f) \n th = [%f, %f]", 
 				target.x, target.y, end.x, end.y, theta[0], theta[1]);
 		
 	}
@@ -57,7 +57,7 @@ public class Main {
 	private static double getDistance(){
 		Point3D[] points = getSensorPoints(2);
 		double distance = (double) points[0].distance(points[1]);
-		System.out.format("point1= (%d,%d) \npoint2= (%d,%d) \ndistance: %d", 
+		System.out.format("point1= (%f,%f) \npoint2= (%f,%f) \ndistance: %f", 
 						points[0].x, points[0].y, points[1].x, points[1].y, distance);
 		Button.waitForAnyPress();
 		return distance;
@@ -79,7 +79,7 @@ public class Main {
 			touchSensor.getTouchMode().fetchSample(sample, 0);  
 			if (sample[0] == 1){
 				points[pnum] = RobotController.getLocation();
-				System.out.format("point%d= %d,%d\n", pnum, points[pnum].x, points[pnum].y);
+				System.out.format("point%f= %f,%f\n", pnum, points[pnum].x, points[pnum].y);
 				pnum++;
 			}
 			Delay.msDelay(300);
@@ -97,14 +97,14 @@ public class Main {
 	private static void doForward2DbyAngle(int angleA, int angleB) {
 		//print starting location
 		Point3D p = RobotController.getLocation();
-		System.out.format("x = %d \ny= %d\n", p.x,p.y);
+		System.out.format("x = %f \ny= %f\n", p.x,p.y);
 		
 		RobotController.rotateTo(new int[] {angleA, angleB});
 		Delay.msDelay(200);
 		
 		int[] theta = RobotController.getJointAngles();
 		p = Kinematics.forwardKinematics(new int[]{theta[0], theta[1]});
-		System.out.format("x = %d \ny= %d \nTachoA: %d \nTachoB: %d\n", p.x,p.y,theta[0], theta[1] );
+		System.out.format("x = %f \ny= %f \nTachoA: %d \nTachoB: %d\n", p.x,p.y,theta[0], theta[1] );
 		Button.waitForAnyPress();
 	}
 

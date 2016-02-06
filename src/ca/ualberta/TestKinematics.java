@@ -27,7 +27,6 @@ public class TestKinematics extends Kinematics {
 		
 		// Initial Condition
 		actual = forwardKinematics(new int[]{0, 0});
-		//System.out.format("actual: %d,%d", actual.x,actual.y);
 		Assert.assertEquals(new Point3D(240,0), actual);
 
 		// Base at 90
@@ -94,6 +93,9 @@ public class TestKinematics extends Kinematics {
 		// Far angle case (negative x, positive y)
 		assertInverse(new Point3D(-L1*scale/root2, L2+L1*scale/root2),
 				new int[]{180-45, -45}, new int[]{180, -30});
+		
+		assertInverse(new Point3D(10,10),
+				new int[]{98, 180}, new int[]{90, 170});
 	}
 	
 	private void assertInverse(Point3D target, int[] expected) {
