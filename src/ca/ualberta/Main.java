@@ -3,11 +3,8 @@ package ca.ualberta;
 import java.awt.Point;
 
 import lejos.hardware.Button;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3TouchSensor;
-import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
 
 public class Main {

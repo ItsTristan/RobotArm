@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class TestKinematics extends Kinematics {
 
-	public static final int dist_thresh = 25;	// Maximum number of mm to be off by in inverse kinematics
+	public static final int dist_thresh = 3;	// Maximum number of mm to be off by in inverse kinematics
 
 	final int L1 = link_lengths[0], L2 = link_lengths[1];
 	

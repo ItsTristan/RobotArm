@@ -33,7 +33,7 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveTo(Point p) {
-		moveAnalytic(p);
+		moveNumerical(p);
 	}
 	
 	/**
@@ -42,7 +42,16 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveAnalytic(Point p) {
-		int[] theta = Kinematics.inverseAnalyticKinematics(p);
+		int[] theta = Kinematics.inverseKinematics(p);
+		rotateTo(theta);
+	}
+	/**
+	 * Moves the end effector to the point p
+	 * using an analytic solution
+	 * @param p
+	 */
+	public static void moveNumerical(Point p) {
+		int[] theta = Kinematics.inverseKinematics(p, getJointAngles());
 		rotateTo(theta);
 	}
 	

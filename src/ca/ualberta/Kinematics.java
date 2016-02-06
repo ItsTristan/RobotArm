@@ -53,6 +53,14 @@ public class Kinematics {
 		int angle = (int)Math.toDegrees(Math.acos(cosAngle));
 		return angle;
 	}
+
+	public static int[] inverseKinematics(Point target) {
+		return inverseAnalyticKinematics(target);
+	}
+
+	public static int[] inverseKinematics(Point target, int[] theta0) {
+		return inverseNumericalKinematics(target, theta0);
+	}
 	
 	/**
 	 * Given a point, computes and returns the joint angles
@@ -61,16 +69,29 @@ public class Kinematics {
 	 * @return final theta values
 	 */
 	public static int[] inverseAnalyticKinematics(Point target) {
-		int[] angles = new int[2]; 
-			double xsqr_ysqr = target.x*target.x + target.y*target.y;
-			angles[1] = (int) Math.toDegrees(Math.acos( ( xsqr_ysqr - link_lengths[0]*link_lengths[0] - link_lengths[1]*link_lengths[1])
-							/ (2*link_lengths[0]*link_lengths[1]) ));
-			angles[0] = (int) Math.toDegrees(Math.asin((link_lengths[1]*Math.sin(angles[1]))
-											/(Math.sqrt(xsqr_ysqr)))
-											+ Math.atan2(target.y, target.x));
-		return angles;
+		double[] angles = new double[2];
+		double r = target.x*target.x + target.y*target.y;
+		double l1 = link_lengths[0];
+		double l2 = link_lengths[1];
+		
+		angles[1] = Math.acos((r-l1*l1-l2*l2) / (2*l1*l2));
+		angles[0] = Math.asin(-l2*Math.sin(angles[1])/(Math.sqrt(r)))
+										+ Math.atan2(target.y, target.x);
+		
+		int[] theta = new int[angles.length];
+		for (int i = 0; i < theta.length; i++) {
+			theta[i] = (int) Math.round(Math.toDegrees(angles[i]));
+		}
+		return theta;
 	}
 	
+	/**
+	 * Solves the inverse kinematics problem using
+	 * Newton's method.
+	 * @param target
+	 * @param theta0
+	 * @return
+	 */
 	public static int[] inverseNumericalKinematics(Point target, int[] theta0) {
 		double[] theta = new double[theta0.length];
 		int[] round = new int[theta0.length];
@@ -93,22 +114,8 @@ public class Kinematics {
 				break;
 			}
 			
-			// Compute the Jacobian
-			// Convention: Jac[row][col]
-			double[][] Jac = new double[2][2];
-			// dx/d0
-			Jac[0][0] = -link_lengths[0]*Math.sin(angles.get(0))
-					-link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
-			Jac[0][1] = -link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
-			
-			Jac[1][0] = link_lengths[0]*Math.cos(angles.get(0))
-					+link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
-			Jac[1][1] = link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
-			
-			DoubleMatrix J = new DoubleMatrix(Jac);
-			
-			// Solve for delta Theta
-			DoubleMatrix delta = Solve.solve(J, error);
+			// Solve for delta theta
+			DoubleMatrix delta = getInverseNumericalStep(error, angles);
 			
 			// Update the angles
 			angles = angles.add(delta);
@@ -118,6 +125,57 @@ public class Kinematics {
 
 		// Round the result
 		return angles.mul(180d/Math.PI).toIntArray();
+	}
+	
+	/**
+	 * Gives one update step, d(theta), for the given target point and
+	 * theta0 values
+	 * @param error
+	 * @param angles, in radians
+	 * @return
+	 */
+	public static DoubleMatrix getInverseNumericalStep(DoubleMatrix error, DoubleMatrix angles) {
+		// Compute the Jacobian
+		// Convention: Jac[row][col]
+		double[][] Jac = new double[2][2];
+		// dx/d0
+		Jac[0][0] = -link_lengths[0]*Math.sin(angles.get(0))
+				-link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
+		Jac[0][1] = -link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
+		
+		Jac[1][0] = link_lengths[0]*Math.cos(angles.get(0))
+				+link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
+		Jac[1][1] = link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
+		
+		DoubleMatrix J = new DoubleMatrix(Jac);
+		
+		// Solve for delta Theta
+		return Solve.solve(J, error);
+	}
+	
+	/**
+	 * Gives one update step, d(theta), for the given target point and
+	 * theta0 values
+	 * @param error
+	 * @param angles, in radians
+	 * @return
+	 */
+	public static double[] getInverseNumericalStep(double[] error, double[] angles) {
+		return getInverseNumericalStep(new DoubleMatrix(error), new DoubleMatrix(angles)).toArray();
+	}
+	
+	/**
+	 * Gives one update step, d(theta), for the given target point and
+	 * theta0 values
+	 * @param error
+	 * @param angles, in degrees
+	 * @return
+	 */
+	public static double[] getInverseNumericalStep(double[] error, int[] angles) {
+		double[] thetas = new double[angles.length];
+		for (int i = 0; i < thetas.length; i++)
+			thetas[i] = Math.toRadians(angles[i]);
+		return getInverseNumericalStep(new DoubleMatrix(error), new DoubleMatrix(thetas)).toArray();
 	}
 	
 	/**
