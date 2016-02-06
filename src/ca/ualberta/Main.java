@@ -16,10 +16,15 @@ public class Main {
 		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
-		Point3D test_point = new Point3D(200,80);
-		testInverse2D(test_point);
-		
-		Button.waitForAnyPress();
+
+//			System.out.println("Move far");
+//			RobotController.moveTo(new Point3D(0,240));
+			
+//			Button.waitForAnyPress();
+			System.out.println("Draw Line");
+			RobotController.drawLineTo(new Point3D(30,200));
+			
+			Button.waitForAnyPress();
 		}
 	}
 	
@@ -45,7 +50,7 @@ public class Main {
 		//somewhere x and y are switched
 		Point3D end = RobotController.getLocation();
 		int[] theta = RobotController.getJointAngles();
-		System.out.format("target= (%d,%d) \nreal= (%d,%d) \n th = [%d, %d]", 
+		System.out.format("target= (%f,%f) \nreal= (%f,%f) \n th = [%d, %d]", 
 				target.x, target.y, end.x, end.y, theta[0], theta[1]);
 		
 	}

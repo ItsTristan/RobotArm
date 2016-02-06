@@ -1,12 +1,11 @@
 package ca.ualberta;
 import java.io.File;
 
-import org.jblas.DoubleMatrix;
-import org.jblas.Solve;
+import lejos.utility.Matrix;
 
 public class Kinematics {
 	
-	
+	public static int step_size = 10;
 	public static final int[] link_lengths = {135, 105};	// the length of each joint in mm.
 	
 	/**
@@ -98,33 +97,42 @@ public class Kinematics {
 		for (int j = 0; j < theta.length; j++)
 			theta[j] = (double)Math.toRadians(theta0[j]);
 
-		DoubleMatrix angles = new DoubleMatrix(theta);
+		Matrix angles = new Matrix(theta, theta.length);
 		
 		for (int i = 0; i < 100; i++) {
 			// Get the error term
-			round = angles.mul(180d/Math.PI).toIntArray();
+			round = toIntArray(angles.times(180d/Math.PI));
 			Point3D actual = forwardKinematics(round);
-			DoubleMatrix error = new DoubleMatrix(
-					new double[]{target.x - actual.x, target.y - actual.y});
+			Matrix error = new Matrix(
+					new double[]{target.x - actual.x, target.y - actual.y}, 
+					2);
 
 			// If error is small enough, stop
-			if (error.norm2() <= Math.sqrt(TestKinematics.dist_thresh)) {
+			if (error.normF() <= Math.sqrt(TestKinematics.dist_thresh)) {
 				break;
 			}
 			
 			// Solve for delta theta
-			DoubleMatrix delta = getInverseNumericalStep(error, angles);
+			Matrix delta = getInverseNumericalStep(error, angles);
 			
 			// Update the angles
-			angles = angles.add(delta);
+			angles = angles.plus(delta);
 			
 			// Repeat a few times to try to reduce the error.
 		}
 
 		// Round the result
-		return angles.mul(180d/Math.PI).toIntArray();
+		return toIntArray(angles.times(180d/Math.PI));
 	}
 	
+	private static int[] toIntArray(Matrix vector) {
+		double[] array = vector.getColumnPackedCopy();
+		int[] result = new int[array.length];
+		for (int i = 0; i < array.length; i++)
+			result[i] = (int) Math.round(array[i]);
+		return result;
+	}
+
 	/**
 	 * Gives one update step, d(theta), for the given target point and
 	 * theta0 values
@@ -132,23 +140,24 @@ public class Kinematics {
 	 * @param angles, in radians
 	 * @return
 	 */
-	public static DoubleMatrix getInverseNumericalStep(DoubleMatrix error, DoubleMatrix angles) {
+	public static Matrix getInverseNumericalStep(Matrix error, Matrix angles) {
+		angles = angles.plus(Matrix.random(2, 1));
 		// Compute the Jacobian
 		// Convention: Jac[row][col]
 		double[][] Jac = new double[2][2];
 		// dx/d0
-		Jac[0][0] = -link_lengths[0]*Math.sin(angles.get(0))
-				-link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
-		Jac[0][1] = -link_lengths[1]*Math.sin(angles.get(0) + angles.get(1));
+		Jac[0][0] = -link_lengths[0]*Math.sin(angles.get(0,0))
+				-link_lengths[1]*Math.sin(angles.get(0,0) + angles.get(1,0));
+		Jac[0][1] = -link_lengths[1]*Math.sin(angles.get(0,0) + angles.get(1,0));
 		
-		Jac[1][0] = link_lengths[0]*Math.cos(angles.get(0))
-				+link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
-		Jac[1][1] = link_lengths[1]*Math.cos(angles.get(0) + angles.get(1));
+		Jac[1][0] = link_lengths[0]*Math.cos(angles.get(0,0))
+				+link_lengths[1]*Math.cos(angles.get(0,0) + angles.get(1,0));
+		Jac[1][1] = link_lengths[1]*Math.cos(angles.get(0,0) + angles.get(1,0));
 		
-		DoubleMatrix J = new DoubleMatrix(Jac);
+		Matrix J = new Matrix(Jac);
 		
 		// Solve for delta Theta
-		return Solve.solve(J, error);
+		return J.solve(error);
 	}
 	
 	/**
@@ -159,7 +168,7 @@ public class Kinematics {
 	 * @return
 	 */
 	public static double[] getInverseNumericalStep(double[] error, double[] angles) {
-		return getInverseNumericalStep(new DoubleMatrix(error), new DoubleMatrix(angles)).toArray();
+		return getInverseNumericalStep(new Matrix(error,error.length), new Matrix(angles,angles.length)).getColumnPackedCopy();
 	}
 	
 	/**
@@ -173,7 +182,11 @@ public class Kinematics {
 		double[] thetas = new double[angles.length];
 		for (int i = 0; i < thetas.length; i++)
 			thetas[i] = Math.toRadians(angles[i]);
-		return getInverseNumericalStep(new DoubleMatrix(error), new DoubleMatrix(thetas)).toArray();
+		return getInverseNumericalStep(error, thetas);
+	}
+	
+	public static Point3D[] createLinePath(Point3D start, Point3D end) {
+		return createLinePath(start, end, (int) Math.floor(start.distance(end)/step_size));
 	}
 	
 	/**
@@ -184,8 +197,20 @@ public class Kinematics {
 	 * @param resolution the number of intermediate points to generate 
 	 * @return
 	 */
-	public static Point3D[] createLinePath(Point3D current, Point3D start, Point3D end, int resolution) {
-		return null;
+	public static Point3D[] createLinePath(Point3D start, Point3D end, int resolution) {
+		Point3D[] points = new Point3D[resolution+1];
+		
+		double len = start.distance(end);
+		double dx = step_size/len*(end.x-start.x);
+		double dy = step_size/len*(end.y-start.y);
+		double dz = step_size/len*(end.z-start.z);
+		
+		for (int i = 1; i <= resolution; i++) {
+			points[i-1] = new Point3D(start.x+dx*i, start.y+dy*i, start.z+dz*i);
+		}
+		points[resolution] = end;
+		
+		return points;
 	}
 	
 	/**
