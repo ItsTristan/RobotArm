@@ -16,10 +16,15 @@ public class Main {
 		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
-		Point3D test_point = new Point3D(200,80);
-		testInverse2D(test_point);
-		
-		Button.waitForAnyPress();
+
+//			System.out.println("Move far");
+//			RobotController.moveTo(new Point3D(0,240));
+			
+//			Button.waitForAnyPress();
+			System.out.println("Draw Line");
+			RobotController.drawLineTo(new Point3D(30,200));
+			
+			Button.waitForAnyPress();
 		}
 	}
 	

@@ -75,10 +75,13 @@ public class TestKinematics extends Kinematics {
 		
 		// Stupid case
 		assertInverse(new Point3D(240,0), new int[]{0,0});
-		
+
 		// Slight variation
 		assertInverse(new Point3D(240,0), new int[]{0,0}, new int[]{10,10});
 
+		// Slight variation
+		assertInverse(new Point3D(231,59), new int[]{10,10}, new int[]{0,0});
+		
 		// Base at 90
 		assertInverse(new Point3D(0,240), new int[]{90,0}, new int[]{82,10});
 		
@@ -96,6 +99,14 @@ public class TestKinematics extends Kinematics {
 		
 		assertInverse(new Point3D(10,10),
 				new int[]{98, 180}, new int[]{90, 170});
+
+		// Degenerate test case
+		assertInverse(new Point3D(30,30),
+				new int[]{98,180}, new int[]{90, 170});
+
+		// Arbitrary example
+		assertInverse(new Point3D(100,100),
+				new int[]{9,109}, new int[]{0, 80});
 	}
 	
 	private void assertInverse(Point3D target, int[] expected) {
@@ -128,5 +139,28 @@ public class TestKinematics extends Kinematics {
 			sep = ", ";
 		}
 		return result.toString();
+	}
+	
+	@Test
+	public void testStepping() {
+		int[] theta = new int[]{0,0};
+		Point3D start = forwardKinematics(theta);
+		Point3D final_location = new Point3D(100,100);
+		
+		Point3D[] line = createLinePath(start, final_location);
+
+		System.out.println(start);
+		for (Point3D target : line) {
+			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), Math.abs(start.distance(target)/step_size) < 1.5);
+
+			theta = inverseAnalyticKinematics(target);
+			start = forwardKinematics(theta);
+			
+			System.out.println(start);
+		}
+		
+		theta = inverseAnalyticKinematics(final_location);
+		
+		Assert.assertTrue(forwardKinematics(theta).distance(final_location) <= dist_thresh);
 	}
 }

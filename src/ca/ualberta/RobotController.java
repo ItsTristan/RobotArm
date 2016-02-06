@@ -4,7 +4,6 @@ package ca.ualberta;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.robotics.RegulatedMotor;
-import lejos.utility.Delay;
 
 public class RobotController {
 	
@@ -32,7 +31,18 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveTo(Point3D p) {
-		moveNumerical(p);
+		System.out.println("Move to " + p);
+		moveAnalytic(p);
+	}
+	
+	public static void drawLineTo(Point3D final_location) {
+		Point3D start = getLocation();
+		
+		Point3D[] line = Kinematics.createLinePath(start, final_location);
+		
+		for (Point3D target : line) {
+			moveTo(target);
+		}
 	}
 	
 	/**
@@ -41,6 +51,7 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveAnalytic(Point3D p) {
+		System.out.println("Analytic Sol.");
 		int[] theta = Kinematics.inverseKinematics(p);
 		rotateTo(theta);
 	}
@@ -50,6 +61,8 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveNumerical(Point3D p) {
+		System.out.println("Numeric Sol.");
+		System.out.println("Point:" + p.x + "," + p.y);
 		int[] theta = Kinematics.inverseKinematics(p, getJointAngles());
 		rotateTo(theta);
 	}
@@ -75,10 +88,10 @@ public class RobotController {
 		motorA.setSpeed(motor_speed);
 		motorB.setSpeed(motor_speed);
 		
-		motorA.rotateTo((int) (theta[0] / gear_ratios[0]));
-		motorB.rotateTo((int) (theta[1] / gear_ratios[1]));
+		motorA.rotateTo((int) (theta[0] / gear_ratios[0]),true);
+		motorB.rotateTo((int) (theta[1] / gear_ratios[1]),false);	// last one should be false
 		
-		Delay.msDelay(delay);
+		//Delay.msDelay(delay);
 	}
 	
 	/**
