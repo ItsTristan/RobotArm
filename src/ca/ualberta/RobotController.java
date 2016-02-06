@@ -1,6 +1,5 @@
 package ca.ualberta;
 
-import java.awt.Point;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
@@ -25,14 +24,14 @@ public class RobotController {
 	 * @param y
 	 */
 	public static void moveTo(int x, int y) {
-		moveTo(new Point(x,y));
+		moveTo(new Point3D(x,y));
 	}
 	
 	/**
 	 * Moves the end effector to the point p
 	 * @param p
 	 */
-	public static void moveTo(Point p) {
+	public static void moveTo(Point3D p) {
 		moveNumerical(p);
 	}
 	
@@ -41,7 +40,7 @@ public class RobotController {
 	 * using an analytic solution
 	 * @param p
 	 */
-	public static void moveAnalytic(Point p) {
+	public static void moveAnalytic(Point3D p) {
 		int[] theta = Kinematics.inverseKinematics(p);
 		rotateTo(theta);
 	}
@@ -50,7 +49,7 @@ public class RobotController {
 	 * using an analytic solution
 	 * @param p
 	 */
-	public static void moveNumerical(Point p) {
+	public static void moveNumerical(Point3D p) {
 		int[] theta = Kinematics.inverseKinematics(p, getJointAngles());
 		rotateTo(theta);
 	}
@@ -87,7 +86,7 @@ public class RobotController {
 	 * accounting for the gear ratios.
 	 * @return
 	 */
-	public static Point getLocation() {
+	public static Point3D getLocation() {
 		return Kinematics.forwardKinematics(getJointAngles());
 	}
 

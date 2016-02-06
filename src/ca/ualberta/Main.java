@@ -1,7 +1,5 @@
 package ca.ualberta;
 
-import java.awt.Point;
-
 import lejos.hardware.Button;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3TouchSensor;
@@ -18,7 +16,7 @@ public class Main {
 		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
-		Point test_point = new Point(200,80);
+		Point3D test_point = new Point3D(200,80);
 		testInverse2D(test_point);
 		
 		Button.waitForAnyPress();
@@ -30,10 +28,10 @@ public class Main {
 	 * @return 
 	 */
 	private static void moveToMidpoint(){
-		Point[] points = getSensorPoints(2);
-		int x_avg = (points[0].x + points[1].x)/2;
-		int y_avg = (points[0].y + points[1].y)/2;
-		Point midpoint = new Point(x_avg, y_avg);
+		Point3D[] points = getSensorPoints(2);
+		double x_avg = (points[0].x + points[1].x)/2;
+		double y_avg = (points[0].y + points[1].y)/2;
+		Point3D midpoint = new Point3D(x_avg, y_avg);
 		testInverse2D(midpoint);
 	}
 	
@@ -41,11 +39,11 @@ public class Main {
 	 * @param target point to move to
 	 * @return 
 	 */
-	private static void testInverse2D(Point target) {
+	private static void testInverse2D(Point3D target) {
 		RobotController.moveTo(target);
 		
 		//somewhere x and y are switched
-		Point end = RobotController.getLocation();
+		Point3D end = RobotController.getLocation();
 		int[] theta = RobotController.getJointAngles();
 		System.out.format("target= (%d,%d) \nreal= (%d,%d) \n th = [%d, %d]", 
 				target.x, target.y, end.x, end.y, theta[0], theta[1]);
@@ -56,9 +54,9 @@ public class Main {
 	 * calculates distance between them
 	 * @return distance between the points
 	 */
-	private static int getDistance(){
-		Point[] points = getSensorPoints(2);
-		int distance = (int) points[0].distance(points[1]);
+	private static double getDistance(){
+		Point3D[] points = getSensorPoints(2);
+		double distance = (double) points[0].distance(points[1]);
 		System.out.format("point1= (%d,%d) \npoint2= (%d,%d) \ndistance: %d", 
 						points[0].x, points[0].y, points[1].x, points[1].y, distance);
 		Button.waitForAnyPress();
@@ -70,8 +68,8 @@ public class Main {
 	 * @param num_points is number of points/presses to wait for
 	 * @return points
 	 */
-	private static Point[] getSensorPoints(int num_points) {
-		Point[] points = new Point[num_points];
+	private static Point3D[] getSensorPoints(int num_points) {
+		Point3D[] points = new Point3D[num_points];
 		int pnum = 0;
 		if (touchSensor == null) {
 			touchSensor = new EV3TouchSensor(SensorPort.S1);
@@ -90,7 +88,7 @@ public class Main {
 	}
 	
 	private static void doAngleBWlines() {
-		Point[] cba = getSensorPoints(3);
+		Point3D[] cba = getSensorPoints(3);
 		int angle = Kinematics.getAngleBWlines(cba[0], cba[1], cba[2]);
 		System.out.format("inter ang= %d \n", angle);
 		Button.waitForAnyPress();
@@ -98,7 +96,7 @@ public class Main {
 
 	private static void doForward2DbyAngle(int angleA, int angleB) {
 		//print starting location
-		Point p = RobotController.getLocation();
+		Point3D p = RobotController.getLocation();
 		System.out.format("x = %d \ny= %d\n", p.x,p.y);
 		
 		RobotController.rotateTo(new int[] {angleA, angleB});
@@ -112,7 +110,7 @@ public class Main {
 
 	private static void testFWDByHand() {
 		while (true) {
-			Point[] p = getSensorPoints(1);	
+			Point3D[] p = getSensorPoints(1);	
 			Button.waitForAnyPress();	
 		}
 	}

@@ -1,6 +1,4 @@
 package ca.ualberta;
-
-import java.awt.Point;
 import java.io.File;
 
 import org.jblas.DoubleMatrix;
@@ -17,14 +15,14 @@ public class Kinematics {
 	 * @param theta
 	 * @return
 	 */
-	public static Point forwardKinematics(int[] theta) {
+	public static Point3D forwardKinematics(int[] theta) {
 		double thetaA = Math.toRadians(theta[0]);
 		double thetaB = Math.toRadians(theta[1]);
-		int x = (int) (link_lengths[0]*Math.cos(thetaA) + 
+		double x = (double) (link_lengths[0]*Math.cos(thetaA) + 
 						link_lengths[1]*Math.cos(thetaA + thetaB));
-		int y = (int) (link_lengths[0]*Math.sin(thetaA) + 
+		double y = (double) (link_lengths[0]*Math.sin(thetaA) + 
 						link_lengths[1]*Math.sin(thetaA + thetaB));
-		Point p = new Point(x,y);
+		Point3D p = new Point3D(x,y);
 		return p;
 	}
 	
@@ -36,7 +34,7 @@ public class Kinematics {
 	 * @return angle between the two lines at point c
 	 */
 		//NEEDS DEBUGGING
-	public static int getAngleBWlines(Point c, Point a, Point b){
+	public static int getAngleBWlines(Point3D c, Point3D a, Point3D b){
 		// get absolute side lengths
 		// sqrt((x2-x1)^2 + (y2-y1)^2)
 //		double AC = Math.sqrt((Math.pow(c.x - a.x, 2) +  Math.pow(c.y - a.y, 2)));
@@ -54,11 +52,11 @@ public class Kinematics {
 		return angle;
 	}
 
-	public static int[] inverseKinematics(Point target) {
+	public static int[] inverseKinematics(Point3D target) {
 		return inverseAnalyticKinematics(target);
 	}
 
-	public static int[] inverseKinematics(Point target, int[] theta0) {
+	public static int[] inverseKinematics(Point3D target, int[] theta0) {
 		return inverseNumericalKinematics(target, theta0);
 	}
 	
@@ -68,7 +66,7 @@ public class Kinematics {
 	 * @param target
 	 * @return final theta values
 	 */
-	public static int[] inverseAnalyticKinematics(Point target) {
+	public static int[] inverseAnalyticKinematics(Point3D target) {
 		double[] angles = new double[2];
 		double r = target.x*target.x + target.y*target.y;
 		double l1 = link_lengths[0];
@@ -92,7 +90,7 @@ public class Kinematics {
 	 * @param theta0
 	 * @return
 	 */
-	public static int[] inverseNumericalKinematics(Point target, int[] theta0) {
+	public static int[] inverseNumericalKinematics(Point3D target, int[] theta0) {
 		double[] theta = new double[theta0.length];
 		int[] round = new int[theta0.length];
 		
@@ -105,7 +103,7 @@ public class Kinematics {
 		for (int i = 0; i < 100; i++) {
 			// Get the error term
 			round = angles.mul(180d/Math.PI).toIntArray();
-			Point actual = forwardKinematics(round);
+			Point3D actual = forwardKinematics(round);
 			DoubleMatrix error = new DoubleMatrix(
 					new double[]{target.x - actual.x, target.y - actual.y});
 
@@ -186,7 +184,7 @@ public class Kinematics {
 	 * @param resolution the number of intermediate points to generate 
 	 * @return
 	 */
-	public static Point[] createLinePath(Point current, Point start, Point end, int resolution) {
+	public static Point3D[] createLinePath(Point3D current, Point3D start, Point3D end, int resolution) {
 		return null;
 	}
 	
@@ -200,7 +198,7 @@ public class Kinematics {
 	 * @param resolution
 	 * @return
 	 */
-	public static Point[] createArcPath(Point current, Point points[], int resolution) {
+	public static Point3D[] createArcPath(Point3D current, Point3D points[], int resolution) {
 		return null;
 	}
 	
@@ -209,7 +207,7 @@ public class Kinematics {
 	 * @param current
 	 * @return
 	 */
-	public static Point[] createPicturePath(Point current, File image) {
+	public static Point3D[] createPicturePath(Point3D current, File image) {
 		return null;
 	}
 }
