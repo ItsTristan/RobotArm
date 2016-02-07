@@ -3,6 +3,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import lejos.utility.Matrix;
+
 public class TestKinematics extends Kinematics {
 
 	public static final int dist_thresh = 3;	// Maximum number of mm to be off by in inverse kinematics
@@ -11,6 +13,8 @@ public class TestKinematics extends Kinematics {
 	
 	final int scale = 10000;
 	final int root2 = (int) (scale*Math.sqrt(2));
+	
+	final boolean verbose = false;
 
 	@Before
 	public void setUp() throws Exception {
@@ -64,7 +68,10 @@ public class TestKinematics extends Kinematics {
 	@Test
 	public void testInverseNumericalKinematics() {
 		using_analytic = false;
-		testInverseKinematics();
+		// Loop to check for consistency
+		for (int i = 0; i < 100; i++) {
+			testInverseKinematics();
+		}
 	}
 	
 	public void testInverseKinematics() {
@@ -74,43 +81,36 @@ public class TestKinematics extends Kinematics {
 		// the returned solution is within some threshold
 		
 		// Stupid case
-		assertInverse(new Point3D(240,0), new int[]{0,0});
+		assertInverse(new Point3D(240,0), new int[]{0,0,0}, new int[]{0,0,0});
 
 		// Slight variation
-		assertInverse(new Point3D(240,0), new int[]{0,0}, new int[]{10,10});
+		assertInverse(new Point3D(240,0), new int[]{0,0,0}, new int[]{10,10,0});
 
 		// Slight variation
-		assertInverse(new Point3D(231,59), new int[]{10,10}, new int[]{0,0});
+		assertInverse(new Point3D(231,59), new int[]{10,10,0}, new int[]{2,2,0});
 		
 		// Base at 90
-		assertInverse(new Point3D(0,240), new int[]{90,0}, new int[]{82,10});
+		assertInverse(new Point3D(0,240), new int[]{90,0,0}, new int[]{82,10,0});
 		
 		// Both at 45/45 (positive x, positive y)
 		assertInverse(new Point3D(L1*scale/root2, L2+L1*scale/root2),
-					new int[]{45,45}, new int[]{30,30});
+					new int[]{45,45,0}, new int[]{30,30,0});
 		
 		// Negative values (positive x, negative y)
 		assertInverse(new Point3D(L1*scale/root2, -(L2+L1*scale/root2)),
-					new int[]{-45, -45}, new int[]{-20,-60});
+					new int[]{-45, -45,0}, new int[]{-20,-60,0});
 		
 		// Far angle case (negative x, positive y)
 		assertInverse(new Point3D(-L1*scale/root2, L2+L1*scale/root2),
-				new int[]{180-45, -45}, new int[]{180, -30});
-		
-		assertInverse(new Point3D(10,10),
-				new int[]{98, 180}, new int[]{90, 170});
+				new int[]{180-45, -45,0}, new int[]{180, -30,0});
 
 		// Degenerate test case
 		assertInverse(new Point3D(30,30),
-				new int[]{98,180}, new int[]{90, 170});
+				new int[]{98,180,0}, new int[]{90, 170,0});
 
 		// Arbitrary example
 		assertInverse(new Point3D(100,100),
-				new int[]{9,109}, new int[]{0, 80});
-	}
-	
-	private void assertInverse(Point3D target, int[] expected) {
-		assertInverse(target, expected, new int[]{0,0});
+				new int[]{9,109,0}, new int[]{0, 80,0});
 	}
 	
 	private void assertInverse(Point3D target, int[] expected, int[] hint) {
@@ -149,18 +149,76 @@ public class TestKinematics extends Kinematics {
 		
 		Point3D[] line = createLinePath(start, final_location);
 
-		System.out.println(start);
+		if (verbose) System.out.println(start);
 		for (Point3D target : line) {
 			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), Math.abs(start.distance(target)/step_size) < 1.5);
 
 			theta = inverseAnalyticKinematics(target);
 			start = forwardKinematics(theta);
 			
-			System.out.println(start);
+			if (verbose) System.out.println(start);
 		}
 		
 		theta = inverseAnalyticKinematics(final_location);
 		
 		Assert.assertTrue(forwardKinematics(theta).distance(final_location) <= dist_thresh);
+	}
+	
+	@Test
+	public void testBroydenUpdate() {
+		// No change
+		Matrix B0 = new Matrix(new double[][] {
+			{1,0,0},
+			{0,1,0},
+			{0,0,1}
+		});
+		Matrix deltaF = new Matrix(new double[]{1,1,1},3);
+		Matrix deltaX = new Matrix(new double[]{1,1,1},3);
+		Matrix B1 = updateBroydenStep(B0, deltaF, deltaX);
+
+		System.out.println(matrixToString(B1));
+		System.out.println(matrixToString(B0));
+		Assert.assertEquals(B0.normF(), B1.normF(), 10e-14);
+		
+		// DeltaF = 0
+		B0 = new Matrix(new double[][] {
+			{1,0,0},
+			{0,1,0},
+			{0,0,1}
+		});
+		deltaF = new Matrix(new double[]{0,0,0},3);
+		deltaX = new Matrix(new double[]{1,1,1},3);
+		B1 = updateBroydenStep(B0, deltaF, deltaX);
+		
+		Matrix BT = new Matrix(new double[][] {
+			{ 2d/3d,  -1d/3d,  -1d/3d},
+			{-1d/3d,   2d/3d,  -1d/3d},
+			{-1d/3d,  -1d/3d,   2d/3d},
+		});
+		
+		System.out.println("Test:");
+		System.out.println(matrixToString(B1));
+		System.out.println(matrixToString(BT));
+		
+		Assert.assertEquals(B1.normF(), BT.normF(), 10e-14);
+		
+		// Weirder case
+		B0 = new Matrix(new double[][] {
+			{0,1,2},
+			{1,2,0},
+			{2,0,1}
+		});
+		deltaF = new Matrix(new double[]{-1,-2,-3},3);
+		deltaX = new Matrix(new double[]{3,2,1},3);
+		B1 = updateBroydenStep(B0, deltaF, deltaX);
+		
+		BT = new Matrix(new double[][] {
+			{-1.0714, 0.2857, 1.6429},
+			{ 0.0714,-1.2857, 0.3571},
+			{-1.1429, 0.5714,-0.7143},
+		});
+
+		Assert.assertEquals(B1.normF(), BT.normF(), 10e-4);
+		
 	}
 }

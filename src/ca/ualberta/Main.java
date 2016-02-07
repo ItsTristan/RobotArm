@@ -1,13 +1,10 @@
 package ca.ualberta;
 
 import lejos.hardware.Button;
-import lejos.hardware.port.SensorPort;
-import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.utility.Delay;
 
 public class Main {
 	// A is the inner-most, B is the outer
-		private static EV3TouchSensor touchSensor;
 		
 	public static void main(String[] args) {
 		while (true){
@@ -21,6 +18,10 @@ public class Main {
 //			RobotController.moveTo(new Point3D(0,240));
 			
 //			Button.waitForAnyPress();
+
+			System.out.println("Move Midpoint");
+			moveToMidpoint();
+			
 			System.out.println("Draw Line");
 			RobotController.drawLineTo(new Point3D(30,200));
 			
@@ -76,18 +77,12 @@ public class Main {
 	private static Point3D[] getSensorPoints(int num_points) {
 		Point3D[] points = new Point3D[num_points];
 		int pnum = 0;
-		if (touchSensor == null) {
-			touchSensor = new EV3TouchSensor(SensorPort.S1);
-		}
-		float[] sample = new float[touchSensor.sampleSize()];
 		while (pnum < num_points){
-			touchSensor.getTouchMode().fetchSample(sample, 0);  
-			if (sample[0] == 1){
-				points[pnum] = RobotController.getLocation();
-				System.out.format("point%f= %f,%f\n", pnum, points[pnum].x, points[pnum].y);
-				pnum++;
-			}
-			Delay.msDelay(300);
+			RobotController.waitForTouch();
+			
+			points[pnum] = RobotController.getLocation();
+			System.out.format("point%f= %f,%f\n", pnum, points[pnum].x, points[pnum].y);
+			pnum++;
 		}
 		return points;
 	}
