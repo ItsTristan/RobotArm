@@ -10,6 +10,7 @@ public class Main {
 		private static EV3TouchSensor touchSensor;
 		
 	public static void main(String[] args) {
+		RobotController.initializeMotorZero();
 		while (true){
 		// maybe make menu on brick??
 		//doAngleBWlines(); 
@@ -22,10 +23,28 @@ public class Main {
 			
 //			Button.waitForAnyPress();
 			System.out.println("Draw Line");
-			RobotController.drawLineTo(new Point3D(30,200));
+//			RobotController.drawLineBW(new Point3D(230, -70), new Point3D(30,200));
+			drawLineFromPointAngleDist(new Point3D(0,100), 0, 180.0);
 			
+//			System.out.println("Move to midpoint");
+//			moveToMidpoint();
+			Button.waitForAnyPress();
+			RobotController.relaxMotors();
 			Button.waitForAnyPress();
 		}
+	}
+	/**
+	 * Takes a point, an angles in degrees and a distance and draws a straight line 
+	 * from the point in the direction of the angle the length of the distance.
+	 * @param start a Point3D
+	 * @param angle in degrees
+	 * @param distance float in millimeters
+	 */
+	private static void drawLineFromPointAngleDist(Point3D start, int angle, double distance){
+		double delta_x = distance*Math.cos(Math.toRadians(angle));
+		double delta_y = distance*Math.sin(Math.toRadians(angle));
+		Point3D end_point = new Point3D(start.x + delta_x, start.y + delta_y);
+		RobotController.drawLineBW(start, end_point);
 	}
 	
 	/** Waits for two target points selected and calculates midpoint
@@ -47,10 +66,9 @@ public class Main {
 	private static void testInverse2D(Point3D target) {
 		RobotController.moveTo(target);
 		
-		//somewhere x and y are switched
 		Point3D end = RobotController.getLocation();
 		int[] theta = RobotController.getJointAngles();
-		System.out.format("target= (%f,%f) \nreal= (%f,%f) \n th = [%f, %f]", 
+		System.out.format("target= (%f,%f) \nreal= (%f,%f) \n th = [%d, %d]", 
 				target.x, target.y, end.x, end.y, theta[0], theta[1]);
 		
 	}
@@ -84,7 +102,7 @@ public class Main {
 			touchSensor.getTouchMode().fetchSample(sample, 0);  
 			if (sample[0] == 1){
 				points[pnum] = RobotController.getLocation();
-				System.out.format("point%f= %f,%f\n", pnum, points[pnum].x, points[pnum].y);
+				System.out.format("point%d= %f,%f\n", pnum, points[pnum].x, points[pnum].y);
 				pnum++;
 			}
 			Delay.msDelay(300);
