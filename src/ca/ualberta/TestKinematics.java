@@ -145,13 +145,13 @@ public class TestKinematics extends Kinematics {
 	public void testStepping() {
 		int[] theta = new int[]{0,0,0};
 		Point3D start = forwardKinematics(theta);
-		Point3D final_location = new Point3D(100,100);
+		Point3D final_location = new Point3D(100,100,0);
 		
 		Point3D[] line = createLinePath(start, final_location);
 
 		if (verbose) System.out.println(start);
 		for (Point3D target : line) {
-			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), Math.abs(start.distance(target)/step_size) < 1.5);
+			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), start.distance(target) <= step_size);
 
 			theta = inverseKinematics(target,theta);
 			start = forwardKinematics(theta);

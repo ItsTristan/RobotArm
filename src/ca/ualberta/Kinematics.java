@@ -89,14 +89,8 @@ public class Kinematics {
 	 * @param b poit from other line
 	 * @return angle between the two lines at point c
 	 */
-		//NEEDS DEBUGGING
 	public static int getAngleBWlines(Point3D c, Point3D a, Point3D b){
 		// get absolute side lengths
-		// sqrt((x2-x1)^2 + (y2-y1)^2)
-//		double AC = Math.sqrt((Math.pow(c.x - a.x, 2) +  Math.pow(c.y - a.y, 2)));
-//		double CB = Math.sqrt((Math.pow(b.x - c.x, 2) +  Math.pow(b.y - c.y, 2)));
-//		double AB = Math.sqrt((Math.pow(b.x - a.x, 2) +  Math.pow(b.y - a.y, 2)));
-		
 		double AB = a.distance(b);
 		double CA = c.distance(a);
 		double CB = c.distance(b);
@@ -132,7 +126,6 @@ public class Kinematics {
 		angles[1] = Math.acos((r-l1*l1-l2*l2) / (2*l1*l2));
 		angles[0] = Math.asin(-l2*Math.sin(angles[1])/(Math.sqrt(r)))
 										+ Math.atan2(target.y, target.x);
-		System.out.format("angles[1]= %f \nangles[0]= %f\n", angles[1], angles[0]);
 		
 		int[] theta = new int[angles.length];
 		for (int i = 0; i < theta.length; i++) {
@@ -489,10 +482,6 @@ public class Kinematics {
 		return getInverseNumericalStep(error, thetas);
 	}
 	
-	public static Point3D[] createLinePath(Point3D start, Point3D end) {
-		return createLinePath(start, end, (int) Math.floor(start.distance(end)/step_size));
-	}
-	
 	/**
 	 * Given two points, returns a list of target points for the robot
 	 * to move towards along a line, or null if the target has been reached.
@@ -501,10 +490,12 @@ public class Kinematics {
 	 * @param resolution the number of intermediate points to generate 
 	 * @return
 	 */
-	public static Point3D[] createLinePath(Point3D start, Point3D end, int resolution) {
+	public static Point3D[] createLinePath(Point3D start, Point3D end) {
+		double len = start.distance(end);
+		int resolution = (int) (len / step_size);
+		
 		Point3D[] points = new Point3D[resolution+1];
 		
-		double len = start.distance(end);
 		double dx = step_size/len*(end.x-start.x);
 		double dy = step_size/len*(end.y-start.y);
 		double dz = step_size/len*(end.z-start.z);

@@ -6,6 +6,7 @@ import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.robotics.RegulatedMotor;
+import lejos.utility.Delay;
 
 public class RobotController {
 	
@@ -21,6 +22,19 @@ public class RobotController {
 
 	private static EV3TouchSensor touchSensor;
 	
+	public static void initializeMotorZero() {
+		getLocation();
+	}
+	
+	/***
+	 * Relaxes motors to be manipulated by hand again
+	 */
+	public static void relaxMotors() {
+		RegulatedMotor motorA = getMotorA();
+		RegulatedMotor motorB = getMotorB();
+		motorA.flt();
+		motorB.flt();
+	}
 	/***
 	 * Moves the end effector to the point (x,y)
 	 * @param x
@@ -39,11 +53,13 @@ public class RobotController {
 		moveAnalytic(p);
 	}
 	
-	public static void drawLineTo(Point3D final_location) {
-		Point3D start = getLocation();
-		
-		Point3D[] line = Kinematics.createLinePath(start, final_location);
-		
+	/**
+	 * Moves to start location then draws line from there to the final location
+	 * @param start_location
+	 * @param final_location
+	 */
+	public static void drawLineBW(Point3D start_location, Point3D final_location) {
+		Point3D[] line = Kinematics.createLinePath(start_location, final_location);	
 		for (Point3D target : line) {
 			moveTo(target);
 		}
@@ -55,7 +71,6 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveAnalytic(Point3D p) {
-		System.out.println("Analytic Sol.");
 		int[] theta = Kinematics.inverseAnalyticKinematics2D(p);
 		rotateTo(theta);
 	}
@@ -95,7 +110,7 @@ public class RobotController {
 		motorA.rotateTo((int) (theta[0] / gear_ratios[0]),true);
 		motorB.rotateTo((int) (theta[1] / gear_ratios[1]),false);	// last one should be false
 		
-		//Delay.msDelay(delay);
+		Delay.msDelay(delay);
 	}
 	
 	/**
