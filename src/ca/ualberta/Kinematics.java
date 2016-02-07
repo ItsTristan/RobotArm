@@ -74,7 +74,7 @@ public class Kinematics {
 		for (int i = 0; i < theta.length; i++) {
 			theta[i] = (int) Math.round(Math.toDegrees(angles[i]));
 		}
-		System.out.format("theta[1]= %d \ntheta[0]= %d\n", theta[1], theta[0]);
+		//System.out.format("theta[1]= %d \ntheta[0]= %d\n", theta[1], theta[0]);
 		return theta;
 	}
 	

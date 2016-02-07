@@ -24,14 +24,23 @@ public class Main {
 //			Button.waitForAnyPress();
 			System.out.println("Draw Line");
 //			RobotController.drawLineBW(new Point3D(230, -70), new Point3D(30,200));
-			drawLineFromPointAngleDist(new Point3D(0,100), 0, 180.0);
+			drawLineFromPointAngleDist(new Point3D(0,220), -20, 100.0);
 			
 //			System.out.println("Move to midpoint");
 //			moveToMidpoint();
 			Button.waitForAnyPress();
-			RobotController.relaxMotors();
-			Button.waitForAnyPress();
+			//RobotController.relaxMotors();
+			//System.out.println("RIGHTBEFORELURGE!!!");
+			//Button.waitForAnyPress();
+			
 		}
+		
+	private static void traceMaze(){
+		Point3D[] path = getSensorPoints(25);
+		Point3D start = path[0];
+		int i = 1;
+		RobotController.drawLineBW(start, );
+		
 	}
 	/**
 	 * Takes a point, an angles in degrees and a distance and draws a straight line 
