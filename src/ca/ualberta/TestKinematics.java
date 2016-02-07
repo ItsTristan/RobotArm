@@ -7,7 +7,7 @@ import lejos.utility.Matrix;
 
 public class TestKinematics extends Kinematics {
 
-	public static final int dist_thresh = 3;	// Maximum number of mm to be off by in inverse kinematics
+	public static final int dist_thresh = 9;	// Maximum number of mm to be off by in inverse kinematics
 
 	final int L1 = link_lengths[0], L2 = link_lengths[1];
 	
@@ -30,27 +30,27 @@ public class TestKinematics extends Kinematics {
 		Point3D actual;
 		
 		// Initial Condition
-		actual = forwardKinematics(new int[]{0, 0});
+		actual = forwardKinematics(new int[]{0, 0, 0});
 		Assert.assertEquals(new Point3D(240,0), actual);
 
 		// Base at 90
-		actual = forwardKinematics(new int[]{90, 0});
+		actual = forwardKinematics(new int[]{90, 0, 0});
 		Assert.assertEquals(new Point3D(0,240), actual);
 		
 		// Both at 45/45 (positive x, positive y)
-		actual = forwardKinematics(new int[]{45, 45});
+		actual = forwardKinematics(new int[]{45, 45, 0});
 		Point3D target = new Point3D(L1*scale/root2, L2+L1*scale/root2);
 		Assert.assertTrue(target+"->"+actual,
 				target.distance(actual) <= 2);
 		
 		// Negative values (positive x, negative y)
-		actual = forwardKinematics(new int[]{-45, -45});
+		actual = forwardKinematics(new int[]{-45, -45, 0});
 		target = new Point3D(L1*scale/root2, -(L2+L1*scale/root2));
 		Assert.assertTrue(target+"->"+actual,
 				target.distance(actual) <= 2);
 		
 		// Far angle case (negative x, positive y)
-		actual = forwardKinematics(new int[]{180-45, -45});
+		actual = forwardKinematics(new int[]{180-45, -45, 0});
 		target = new Point3D(-L1*scale/root2, L2+L1*scale/root2);
 		Assert.assertTrue(target+"->"+actual,
 				target.distance(actual) <= 2);
@@ -116,7 +116,7 @@ public class TestKinematics extends Kinematics {
 	private void assertInverse(Point3D target, int[] expected, int[] hint) {
 		int[] actual;
 		if (using_analytic) {
-			actual = inverseAnalyticKinematics(target);
+			actual = inverseAnalyticKinematics2D(target);
 		} else {
 			actual = inverseNumericalKinematics(target,hint);
 		}
@@ -143,7 +143,7 @@ public class TestKinematics extends Kinematics {
 	
 	@Test
 	public void testStepping() {
-		int[] theta = new int[]{0,0};
+		int[] theta = new int[]{0,0,0};
 		Point3D start = forwardKinematics(theta);
 		Point3D final_location = new Point3D(100,100);
 		
@@ -153,13 +153,13 @@ public class TestKinematics extends Kinematics {
 		for (Point3D target : line) {
 			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), Math.abs(start.distance(target)/step_size) < 1.5);
 
-			theta = inverseAnalyticKinematics(target);
+			theta = inverseKinematics(target,theta);
 			start = forwardKinematics(theta);
 			
 			if (verbose) System.out.println(start);
 		}
 		
-		theta = inverseAnalyticKinematics(final_location);
+		theta = inverseKinematics(final_location, theta);
 		
 		Assert.assertTrue(forwardKinematics(theta).distance(final_location) <= dist_thresh);
 	}
@@ -195,10 +195,6 @@ public class TestKinematics extends Kinematics {
 			{-1d/3d,   2d/3d,  -1d/3d},
 			{-1d/3d,  -1d/3d,   2d/3d},
 		});
-		
-		System.out.println("Test:");
-		System.out.println(matrixToString(B1));
-		System.out.println(matrixToString(BT));
 		
 		Assert.assertEquals(B1.normF(), BT.normF(), 10e-14);
 		

@@ -28,6 +28,12 @@ public class Point3D {
         this.y = y;
         this.z = z;
     }
+    
+    public Point3D(Matrix p) {
+    	this.x = p.get(0,0);
+    	this.y = p.get(1,0);
+    	this.z = p.get(2,0);
+    }
 
     // accessor methods
     public double x() { return x; }

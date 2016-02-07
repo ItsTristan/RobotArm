@@ -56,7 +56,7 @@ public class RobotController {
 	 */
 	public static void moveAnalytic(Point3D p) {
 		System.out.println("Analytic Sol.");
-		int[] theta = Kinematics.inverseKinematics(p);
+		int[] theta = Kinematics.inverseAnalyticKinematics2D(p);
 		rotateTo(theta);
 	}
 	/**

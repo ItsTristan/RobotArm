@@ -6,7 +6,7 @@ import lejos.utility.Matrix;
 public class Kinematics {
 	
 	public static int step_size = 10;
-	public static final int[] link_lengths = {135, 105};	// the length of each joint in mm.
+	public static final int[] link_lengths = {135, 105, 85};	// the length of each joint in mm.
 	
 	/**
 	 * Given a set of theta values for the joint angles, returns
@@ -17,12 +17,69 @@ public class Kinematics {
 	public static Point3D forwardKinematics(int[] theta) {
 		double thetaA = Math.toRadians(theta[0]);
 		double thetaB = Math.toRadians(theta[1]);
-		double x = (link_lengths[0]*Math.cos(thetaA) + 
-						link_lengths[1]*Math.cos(thetaA + thetaB));
-		double y = (link_lengths[0]*Math.sin(thetaA) + 
-						link_lengths[1]*Math.sin(thetaA + thetaB));
-		Point3D p = new Point3D(x,y);
-		return p;
+		double thetaC = Math.toRadians(theta[2]);
+
+		// == Base Parameters
+		Matrix TBase = new Matrix(new double[][]{
+			{1,0,0,0},
+			{0,1,0,0},
+			{0,0,1,link_lengths[2]},
+			{0,0,0,1},
+		});
+		Matrix RBase = new Matrix(new double[][]{
+			{1,0,0,0},
+			{0,1,0,0},
+			{0,0,1,0},
+			{0,0,0,1}
+		});
+		
+		// == Motor A Parameters
+		Matrix TA = new Matrix(new double[][]{
+			{1,0,0,link_lengths[0]},
+			{0,1,0,0},
+			{0,0,1,0},
+			{0,0,0,1},
+		});
+		Matrix RA = new Matrix(new double[][]{
+			{Math.cos(thetaA), -Math.sin(thetaA), 0, 0},
+			{Math.sin(thetaA),  Math.cos(thetaA), 0, 0},
+			{0,0,1,0},
+			{0,0,0,1}
+		});
+		// == Motor B Parameters
+		Matrix TB = new Matrix(new double[][]{
+			{1,0,0,link_lengths[1]},
+			{0,1,0,0},
+			{0,0,1,0},
+			{0,0,0,1},
+		});
+		Matrix RB = new Matrix(new double[][]{
+			{Math.cos(thetaB), -Math.sin(thetaB), 0, 0},
+			{Math.sin(thetaB),  Math.cos(thetaB), 0, 0},
+			{0,0,1,0},
+			{0,0,0,1}
+		});
+		// == Motor C Parameters
+		Matrix TC = new Matrix(new double[][]{
+			{1,0,0,0},
+			{0,1,0,0},
+			{0,0,1,-link_lengths[2]},
+			{0,0,0,1},
+		});
+		Matrix RC = new Matrix(new double[][]{
+			{Math.cos(thetaC), 0, -Math.sin(thetaC), 0},
+			{0,1,0,0},
+			{Math.sin(thetaC), 0,  Math.cos(thetaC), 0},
+			{0,0,0,1}
+		});
+		
+		Matrix end = RBase.times(TBase)
+				.times(RA).times(TA)
+				.times(RB).times(TB)
+				.times(RC).times(TC)
+				.times(new Matrix(new double[]{0,0,0,1},4));
+		
+		return new Point3D(end);
 	}
 	
 	/**
@@ -51,9 +108,9 @@ public class Kinematics {
 		return angle;
 	}
 
-	public static int[] inverseKinematics(Point3D target) {
-		return inverseAnalyticKinematics(target);
-	}
+//	public static int[] inverseKinematics(Point3D target) {
+//		return inverseAnalyticKinematics(target);
+//	}
 
 	public static int[] inverseKinematics(Point3D target, int[] theta0) {
 		return inverseNumericalKinematics(target, theta0);
@@ -65,8 +122,8 @@ public class Kinematics {
 	 * @param target
 	 * @return final theta values
 	 */
-	public static int[] inverseAnalyticKinematics(Point3D target) {
-		double[] angles = new double[2];
+	public static int[] inverseAnalyticKinematics2D(Point3D target) {
+		double[] angles = new double[3];
 		double r = target.x*target.x + target.y*target.y;
 		double l1 = link_lengths[0];
 		double l2 = link_lengths[1];
@@ -82,6 +139,10 @@ public class Kinematics {
 			theta[i] = (int) Math.round(Math.toDegrees(angles[i]));
 		}
 		System.out.format("theta[1]= %d \ntheta[0]= %d\n", theta[1], theta[0]);
+
+		// Invalid for 3D inverse kinematics, so zero out the last entry
+		angles[2] = 0;
+		
 		return theta;
 	}
 	
@@ -107,8 +168,8 @@ public class Kinematics {
 			round = toIntArray(angles.times(180d/Math.PI));
 			Point3D actual = forwardKinematics(round);
 			Matrix error = new Matrix(
-					new double[]{target.x - actual.x, target.y - actual.y}, 
-					2);
+					new double[]{target.x - actual.x, target.y - actual.y, 0}, 
+					3);
 
 			// If error is small enough, stop
 			if (error.normF() <= Math.sqrt(TestKinematics.dist_thresh)) {
@@ -116,7 +177,7 @@ public class Kinematics {
 			}
 			
 			// Solve for delta theta
-			Matrix delta = getInverseNumericalStep(error, angles);
+			Matrix delta = getInverseNumerical2DStep(error, angles);
 			
 			// Update the angles
 			angles = angles.plus(delta);
@@ -129,82 +190,201 @@ public class Kinematics {
 	}
 	
 	public static int[] inverseNumericalKinematics(Point3D target, int[] theta0) {
-		// Convert theta0 to matrix
-		double theta[] = new double[theta0.length-1];
-		for (int i=0; i<theta.length; i++)
-			theta[i] = Math.toRadians(theta0[i]);
-		// Initial angles + noise
-		Matrix angles = new Matrix(theta, theta.length);
+		double thetaA = Math.toRadians(theta0[0]);
+		double thetaB = Math.toRadians(theta0[1]);
+		double thetaC = Math.toRadians(theta0[2]);
 		
-		// Get f0, deltaF
-		Point3D ppos = target;
-		Point3D actual = forwardKinematics(toIntArray(angles.times(180d/Math.PI)));
-		Matrix deltaTarget = actual.minus(target).toMatrix().getMatrix(0, 1, 0, 0);
+		Matrix theta = new Matrix(new double[] {thetaA, thetaB, thetaC}, 3);
 		
-		// Stop if we're already in range.
-		if (deltaTarget.normF() < Math.sqrt(TestKinematics.dist_thresh))
-			return theta0;
-		
-		// Secant approximation
-		Point3D dt1 = forwardKinematics(new int[]{theta0[0]+1, theta0[1], theta0[2]})
-				.minus(forwardKinematics(new int[]{theta0[0]-1, theta0[1], theta0[2]}));
-		
-		Point3D dt2 = forwardKinematics(new int[]{theta0[0], theta0[1]+1, theta0[2]})
-				.minus(forwardKinematics(new int[]{theta0[0], theta0[1]-1, theta0[2]}));
-		
- 		Point3D dt3 = forwardKinematics(new int[]{theta0[0], theta0[1], theta0[2]+1})
-				.minus(forwardKinematics(new int[]{theta0[0], theta0[1], theta0[2]-1}));
-
-//		// Get an initial estimate for the Jacobian
-//		Matrix J = new Matrix(new double[][] {
-//			{dt1.x, dt1.y, dt1.z},
-//			{dt2.x, dt2.y, dt2.z},
-//			{dt3.x, dt3.y, dt3.z},
-//		}).times(Math.PI/90d); // divide out that d(radian) term
-		
-		// Get an initial estimate for the Jacobian
-		Matrix B = new Matrix(new double[][] {
-			{dt1.x, dt2.x},
-			{dt1.y, dt2.y},
-		}).times(90d/Math.PI); // divide out that d(radian) term
-		
-		// Loop until good enough
 		for (int i = 0; i < 100; i++) {
-			// Add some noise to avoid singularities
-			B = B.plus((Matrix.random(2, 2).minus(Matrix.random(2, 2)))
-						.times(10e-13));
+			// Error term
+			Point3D actual = forwardKinematics(toIntArray(theta.times(180/Math.PI)));
+			Matrix dY = target.toMatrix().minus(actual.toMatrix());
 			
-			// Solve for the angle update term
-			Matrix deltaX = B.solve(deltaTarget.times(-1));
-			
-			// Update the angles
-			angles = angles.plus(deltaX);
-			
-			for (int e = 0; e < angles.getColumnPackedCopy().length; e++) {
-				angles.set(e, 0, (angles.get(e, 0)+(2*Math.PI)) % (2*Math.PI));
-			}
-			
-			// Update position
-			ppos = actual;
-			actual = forwardKinematics(toIntArray(angles.times(180d/Math.PI)));
-
-			// Update the error term
-			deltaTarget = actual.minus(target).toMatrix().getMatrix(0, 1, 0, 0);
-			// Check if within threshold
-			if (deltaTarget.normF() < Math.sqrt(TestKinematics.dist_thresh)) {
+			if (dY.normF() < (TestKinematics.dist_thresh))
 				break;
-			}
 			
-			// Update the change in Y = (actual - target) - (previous - target)
-			Matrix deltaY = actual.minus(ppos).toMatrix().getMatrix(0, 1, 0, 0);
+			// == Motor A Parameters
+			Matrix TA = new Matrix(new double[][]{
+				{1,0,0,link_lengths[0]},
+				{0,1,0,0},
+				{0,0,1,0},
+				{0,0,0,1},
+			});
+			Matrix RA = new Matrix(new double[][]{
+				{Math.cos(thetaA), -Math.sin(thetaA), 0, 0},
+				{Math.sin(thetaA),  Math.cos(thetaA), 0, 0},
+				{0,0,1,0},
+				{0,0,0,1}
+			});
+			Matrix dRA = new Matrix(new double[][]{
+				{-Math.sin(thetaA), -Math.cos(thetaA), 0, 0},
+				{ Math.cos(thetaA), -Math.sin(thetaA), 0, 0},
+				{0,0,1,0},
+				{0,0,0,1}
+			});
 			
-			// Update the Jacobian
-			B = updateBroydenStep(B, deltaY, deltaX);
+			Matrix HA = TA.times(RA);
+			Matrix dHA = TA.times(dRA);
 			
+			// == Motor B Parameters
+			Matrix TB = new Matrix(new double[][]{
+				{1,0,0,link_lengths[1]},
+				{0,1,0,0},
+				{0,0,1,0},
+				{0,0,0,1},
+			});
+			Matrix RB = new Matrix(new double[][]{
+				{Math.cos(thetaB), -Math.sin(thetaB), 0, 0},
+				{Math.sin(thetaB),  Math.cos(thetaB), 0, 0},
+				{0,0,1,0},
+				{0,0,0,1}
+			});
+			Matrix dRB = new Matrix(new double[][]{
+				{-Math.sin(thetaB), -Math.cos(thetaB), 0, 0},
+				{ Math.cos(thetaB), -Math.sin(thetaB), 0, 0},
+				{0,0,1,0},
+				{0,0,0,1}
+			});
+			
+			Matrix HB = TB.times(RB);
+			Matrix dHB = TB.times(dRB);
+			
+			// == Motor C Parameters
+			Matrix TC = new Matrix(new double[][]{
+				{1,0,0,0},
+				{0,1,0,0},
+				{0,0,1,-link_lengths[2]},
+				{0,0,0,1},
+			});
+			Matrix RC = new Matrix(new double[][]{
+				{Math.cos(thetaC), 0, -Math.sin(thetaC), 0},
+				{0,1,0,0},
+				{Math.sin(thetaC), 0,  Math.cos(thetaC), 0},
+				{0,0,0,1}
+			});
+			Matrix dRC = new Matrix(new double[][]{
+				{-Math.sin(thetaC), 0, -Math.cos(thetaC), 0},
+				{0,1,0,0},
+				{Math.cos(thetaC), 0,  -Math.sin(thetaC), 0},
+				{0,0,0,1}
+			});
+			
+			Matrix HC = TB.times(RC);
+			Matrix dHC = TC.times(dRC);
+			
+			// Jacobian
+			Matrix origin = new Matrix(new double[]{0,0,0,1}, 4);
+			Matrix dTheta1 = dHA.times(HB).times(HC).times(origin);
+			Matrix dTheta2 = HA.times(dHB).times(HC).times(origin);
+			Matrix dTheta3 = HA.times(HB).times(dHC).times(origin);
+			
+			Matrix J = new Matrix(new double[][] {
+				{dTheta1.get(0, 0), dTheta2.get(0, 0), dTheta3.get(0,0)},
+				{dTheta1.get(1, 0), dTheta2.get(1, 0), dTheta3.get(1,0)},
+				{dTheta1.get(2, 0), dTheta2.get(2, 0), dTheta3.get(2,0)},
+			});
+			
+			// Solve the inverse problem
+			Matrix dX = J.solve(dY).times(0.5);
+			
+			theta = theta.plus(dX);
+
+			thetaA = theta.get(0, 0) % (2*Math.PI);
+			thetaB = theta.get(1, 0) % (2*Math.PI);
+			thetaC = theta.get(2, 0) % (2*Math.PI);
+			
+			theta = new Matrix(new double[] {thetaA, thetaB, thetaC},3);
 		}
-		
-		return toIntArray(angles.times(180d/Math.PI));
+		return toIntArray(theta.times(180/Math.PI));
 	}
+	
+//	public static int[] inverseNumericalKinematics(Point3D target, int[] theta0) {
+//		// Convert theta0 to matrix
+//		double theta[] = new double[theta0.length];
+//		for (int i=0; i<theta.length; i++)
+//			theta[i] = Math.toRadians(theta0[i]);
+//		
+//		// Initial angles
+//		Matrix angles = new Matrix(theta, theta.length);
+//		
+//		// Get f0, deltaF
+//		Point3D ppos = target;
+//		Point3D actual = forwardKinematics(toIntArray(angles.times(180d/Math.PI)));
+//		System.out.println("epos = " + actual);
+//		
+//		Matrix deltaTarget = actual.minus(target).toMatrix();
+//		System.out.println("epos-target = " + matrixToString(deltaTarget));
+//		
+//		// Stop if we're already in range.
+//		if (deltaTarget.normF() < Math.sqrt(TestKinematics.dist_thresh))
+//			return theta0;
+//		
+//		// Secant approximation
+//		Point3D dt1 = forwardKinematics(new int[]{theta0[0]+1, theta0[1], theta0[2]})
+//				.minus(forwardKinematics(new int[]{theta0[0], theta0[1], theta0[2]}));
+//		
+//		Point3D dt2 = forwardKinematics(new int[]{theta0[0], theta0[1]+1, theta0[2]})
+//				.minus(forwardKinematics(new int[]{theta0[0], theta0[1], theta0[2]}));
+//		
+// 		Point3D dt3 = forwardKinematics(new int[]{theta0[0], theta0[1], theta0[2]+1})
+//				.minus(forwardKinematics(new int[]{theta0[0], theta0[1], theta0[2]}));
+//
+//		// Get an initial estimate for the Jacobian
+//		Matrix B = new Matrix(new double[][] {
+//			{dt1.x, dt2.x, dt3.x},
+//			{dt1.y, dt2.y, dt3.y},
+//			{dt1.z, dt2.z, dt3.z},
+//		}).times(Math.PI/180d); // divide out that d(radian) term
+//		System.out.println("Bk = " + matrixToString(B));
+//		
+//		// Loop until good enough
+//		for (int i = 0; i < 100; i++) {
+//			// Add some noise to avoid singularities
+////			B = B.plus(B.arrayTimes((Matrix.random(3, 3).minus(Matrix.random(3, 3)))
+////						.times(10e-13)));
+//			// Solve for the angle update term
+//			LUDecomposition LU = new LUDecomposition(B);
+//			if (!LU.isNonsingular()) {
+//				System.out.println("Matrix is singular!");
+//				break;
+//			}
+//			Matrix deltaX = B.solve(deltaTarget.times(-1));
+//			System.out.println("sk = " + matrixToString(deltaX));
+//			
+//			// Update the angles
+//			angles = angles.plus(deltaX);
+//			
+//			// Modulo 2pi
+//			for (int e = 0; e < angles.getColumnPackedCopy().length; e++) {
+//				angles.set(e, 0, (angles.get(e, 0)+(2*Math.PI)) % (2*Math.PI));
+//			}
+//			System.out.println("theta = " + matrixToString(angles));
+//			
+//			// Update position
+//			ppos = actual;
+//			actual = forwardKinematics(toIntArray(angles.times(180d/Math.PI)));
+//			System.out.println("epos = " + actual);
+//
+//			// Update the error term
+//			deltaTarget = actual.minus(target).toMatrix();
+//			// Check if within threshold
+//			if (deltaTarget.normF() < Math.sqrt(TestKinematics.dist_thresh)) {
+//				break;
+//			}
+//			
+//			// Update the change in Y = (actual - target) - (previous - target)
+//			Matrix deltaY = actual.minus(ppos).toMatrix();
+//			System.out.println("yk = " + matrixToString(deltaY));
+//			
+//			// Update the Jacobian
+//			B = updateBroydenStep(B, deltaY, deltaX);
+//			System.out.println("Bk = " + matrixToString(B));
+//			
+//		}
+//		
+//		return toIntArray(angles.times(180d/Math.PI));
+//	}
 	
 	protected static String matrixToString(Matrix M) {
 		StringBuilder res = new StringBuilder("[\n");
@@ -212,7 +392,10 @@ public class Kinematics {
 			String sep = "\t";
 			for (double col : row) {
 				res.append(sep);
-				res.append(col);
+				if (col == 0)
+					res.append("      0");
+				else
+					res.append(String.format("%1.5f", col));
 				sep = ",\t";
 			}
 			res.append('\n');
@@ -257,59 +440,12 @@ public class Kinematics {
 	 * @param angles, in radians
 	 * @return
 	 */
-	public static Matrix getInverseNumericalStep(Matrix error, Matrix angles) {
+	public static Matrix getInverseNumerical2DStep(Matrix error, Matrix angles) {
 		// Perturb the angle to avoid singular points
-//		angles = angles.plus(Matrix.random(3, 1));
-		angles = angles.plus(Matrix.random(2, 1));
+		angles = angles.plus(Matrix.random(angles.getRowDimension(), 1));
 
-//		// Get the forward transforms
-//		Matrix HA = new Matrix(new double[][]{
-//			{Math.cos(angles.get(0, 0)), -Math.sin(angles.get(0, 0)), 0, link_lengths[0]},
-//			{Math.sin(angles.get(0, 0)),  Math.cos(angles.get(0, 0)), 0, 0},
-//			{0, 0, 1, 0},
-//			{0, 0, 0, 1}
-//		});
-//		Matrix HB = new Matrix(new double[][]{
-//			{Math.cos(angles.get(1, 0)), -Math.sin(angles.get(1, 0)), 0, link_lengths[1]},
-//			{Math.sin(angles.get(1, 0)),  Math.cos(angles.get(1, 0)), 0, 0},
-//			{0, 0, 1, 0},
-//			{0, 0, 0, 1}
-//		});
-//		Matrix HC = new Matrix(new double[][]{
-//			{Math.cos(angles.get(2, 0)), 0, -Math.sin(angles.get(2, 0)), link_lengths[2]},
-//			{0, 1, 0,  0},
-//			{Math.sin(angles.get(2, 0)),  0, Math.cos(angles.get(2, 0)), 0},
-//			{0, 0, 0, 1}
-//		});
-//		
-//		// Get the derivatives
-//		Matrix DA = new Matrix(new double[][] {
-//			{-Math.sin(angles.get(0, 0)), -Math.cos(angles.get(0, 0)), 0, 0},
-//			{ Math.cos(angles.get(0, 0)), -Math.sin(angles.get(0, 0)), 0, 0},
-//			{0, 0, 0, 0},
-//			{0, 0, 0, 0}
-//		});
-//		Matrix DB = new Matrix(new double[][] {
-//			{-Math.sin(angles.get(1, 0)), -Math.cos(angles.get(1, 0)), 0, 0},
-//			{ Math.cos(angles.get(1, 0)), -Math.sin(angles.get(1, 0)), 0, 0},
-//			{0, 0, 0, 0},
-//			{0, 0, 0, 0}
-//		});
-//		Matrix DC = new Matrix(new double[][]{
-//			{-Math.sin(angles.get(2, 0)), 0, -Math.cos(angles.get(2, 0))},
-//			{0, 0, 0,  0},
-//			{ Math.cos(angles.get(2, 0)), 0, -Math.sin(angles.get(2, 0)), 0},
-//			{0, 0, 0, 0}
-//		});
-//		
-//		// Get the origin
-//		Matrix origin = new Matrix(new double[] {0,0,0,1}, 4);
-//		
-//		// Compute the Jacobian
-//		Matrix J = new Matrix(4,4);
-//		
 		
-		double[][] Jac = new double[2][2];
+		double[][] Jac = new double[3][2];
 		// dx/d0
 		Jac[0][0] = -link_lengths[0]*Math.sin(angles.get(0,0))
 				-link_lengths[1]*Math.sin(angles.get(0,0) + angles.get(1,0));
@@ -318,6 +454,9 @@ public class Kinematics {
 		Jac[1][0] = link_lengths[0]*Math.cos(angles.get(0,0))
 				+link_lengths[1]*Math.cos(angles.get(0,0) + angles.get(1,0));
 		Jac[1][1] = link_lengths[1]*Math.cos(angles.get(0,0) + angles.get(1,0));
+		
+		Jac[2][0] = 0;
+		Jac[2][1] = 0;
 		
 		Matrix J = new Matrix(Jac);
 		
@@ -333,7 +472,7 @@ public class Kinematics {
 	 * @return
 	 */
 	public static double[] getInverseNumericalStep(double[] error, double[] angles) {
-		return getInverseNumericalStep(new Matrix(error,error.length), new Matrix(angles,angles.length)).getColumnPackedCopy();
+		return getInverseNumerical2DStep(new Matrix(error,error.length), new Matrix(angles,angles.length)).getColumnPackedCopy();
 	}
 	
 	/**
