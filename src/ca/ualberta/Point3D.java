@@ -1,5 +1,7 @@
 package ca.ualberta;
 
+import lejos.utility.Matrix;
+
 public class Point3D {
 	//http://introcs.cs.princeton.edu/java/33design/Point.java.html
 	protected final double x;    // x-coordinate
@@ -25,6 +27,12 @@ public class Point3D {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+    
+    public Point3D(Matrix p) {
+    	this.x = p.get(0,0);
+    	this.y = p.get(1,0);
+    	this.z = p.get(2,0);
     }
 
     // accessor methods
@@ -53,5 +61,21 @@ public class Point3D {
     	Point3D that = (Point3D) other;
     	return this.distance(that) < Math.pow(10, -13);
     }
+    
+    public Point3D minus(Point3D that) {
+    	return new Point3D(this.x - that.x, this.y - that.y, this.z - that.z);
+    }
+    
+    public double[] toDouble() {
+    	return new double[] {this.x, this.y, this.z};
+    }
+    
+    public Matrix toHomogenousCoords() {
+    	return new Matrix(new double[] {this.x, this.y, this.z, 1}, 4);
+    }
+
+	public Matrix toMatrix() {
+    	return new Matrix(new double[] {this.x, this.y, this.z}, 3);
+	}
     
 }

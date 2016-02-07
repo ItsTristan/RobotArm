@@ -4,6 +4,8 @@ package ca.ualberta;
 import lejos.hardware.Button;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
 
@@ -18,6 +20,8 @@ public class RobotController {
 	private static final int motor_accel = 20;
 	
 	private static final double[] gear_ratios = {15d/30d, 1d};
+
+	private static EV3TouchSensor touchSensor;
 	
 	public static void initializeMotorZero() {
 		getMotorA().resetTachoCount();
@@ -70,8 +74,7 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveAnalytic(Point3D p) {
-		//System.out.println("Analytic Sol.");
-		int[] theta = Kinematics.inverseKinematics(p);
+		int[] theta = Kinematics.inverseAnalyticKinematics2D(p);
 		rotateTo(theta);
 	}
 	/**
@@ -133,6 +136,39 @@ public class RobotController {
 		};
 	}
 	
+	/**
+	 * Stalls execution until the touch sensor is pressed then released
+	 */
+	public static void waitForTouch() {
+		waitForTouchPressed();
+		waitForTouchReleased();
+	}
+
+	/**
+	 * Stalls execution unless the touch sensor is pressed down
+	 */
+	public static void waitForTouchPressed() { 
+		float[] sample = new float[getTouchSensor().sampleSize()];
+		// Wait for press
+		while (true) {
+			getTouchSensor().getTouchMode().fetchSample(sample, 0);
+			if (sample[0] > 0.99)
+				break;
+		}
+	}
+	
+	/**
+	 * Stalls execution unless the touch sensor is not pressed down
+	 */
+	public static void waitForTouchReleased() {
+		float[] sample = new float[getTouchSensor().sampleSize()];
+		// Wait for released
+		while (true) {
+			getTouchSensor().getTouchMode().fetchSample(sample, 0);
+			if (sample[0] < 0.1)
+				break;
+		}
+	}
 	
 	private static RegulatedMotor getMotorA() {
 		if (m_motorA == null)
@@ -149,4 +185,11 @@ public class RobotController {
 			m_motorC = new EV3LargeRegulatedMotor(MotorPort.C);
 		return m_motorC;
 	}
+	private static EV3TouchSensor getTouchSensor() {
+		if (touchSensor == null) {
+			touchSensor = new EV3TouchSensor(SensorPort.S1);
+		}
+		return touchSensor;
+	}
+	
 }

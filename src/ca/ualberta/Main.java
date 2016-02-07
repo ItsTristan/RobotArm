@@ -32,15 +32,15 @@ public class Main {
 			//RobotController.relaxMotors();
 			//System.out.println("RIGHTBEFORELURGE!!!");
 			//Button.waitForAnyPress();
-			
 		}
+	}	
 		
 	private static void traceMaze(){
-		Point3D[] path = getSensorPoints(25);
-		Point3D start = path[0];
-		int i = 1;
-		RobotController.drawLineBW(start, );
-		
+		int num_nodes = 25;
+		Point3D[] path = getSensorPoints(num_nodes);
+		for ( int i = 1; i < num_nodes; i++ ) {
+			RobotController.drawLineBW(path[i-1], path[i]);
+		}	
 	}
 	/**
 	 * Takes a point, an angles in degrees and a distance and draws a straight line 
