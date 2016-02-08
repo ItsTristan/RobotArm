@@ -70,9 +70,9 @@ public class Kinematics {
 			{0,0,0,1},
 		});
 		Matrix RC = new Matrix(new double[][]{
-			{Math.cos(thetaC), 0, -Math.sin(thetaC), 0},
-			{0,1,0,0},
-			{Math.sin(thetaC), 0,  Math.cos(thetaC), 0},
+			{1,0,0,0},
+			{0,Math.cos(thetaC), -Math.sin(thetaC), 0},
+			{0,Math.sin(thetaC),  Math.cos(thetaC), 0},
 			{0,0,0,1}
 		});
 		

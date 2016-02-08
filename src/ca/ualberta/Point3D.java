@@ -50,7 +50,7 @@ public class Point3D {
     }
     // return a string representation of this point
     public String toString() {
-        return "(" + x + ", " + y + ", " + z + ")";
+        return "(" + String.format("%.5f",x) + ", " + String.format("%.5f",y) + ", " + String.format("%.5f",z) + ")";
     } 
     public boolean equals(Object other){
     	// Make sure the object we're comparing is the right type

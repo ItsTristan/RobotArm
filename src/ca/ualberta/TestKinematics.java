@@ -9,10 +9,12 @@ public class TestKinematics extends Kinematics {
 
 	public static final int dist_thresh = 9;	// Maximum number of mm to be off by in inverse kinematics
 
-	final int L1 = link_lengths[0], L2 = link_lengths[1];
+	final int L1 = link_lengths[0];
+	final int L2 = link_lengths[1];
+	final int L3 = link_lengths[2];
 	
-	final int scale = 10000;
-	final int root2 = (int) (scale*Math.sqrt(2));
+	final double root2 = Math.sqrt(2);
+	final double root3 = Math.sqrt(3);
 	
 	final boolean verbose = false;
 
@@ -31,28 +33,46 @@ public class TestKinematics extends Kinematics {
 		
 		// Initial Condition
 		actual = forwardKinematics(new int[]{0, 0, 0});
-		Assert.assertEquals(new Point3D(240,0), actual);
+		Assert.assertEquals(new Point3D(L1+L2,0), actual);
 
 		// Base at 90
 		actual = forwardKinematics(new int[]{90, 0, 0});
-		Assert.assertEquals(new Point3D(0,240), actual);
+		Assert.assertEquals(new Point3D(0,L1+L2), actual);
 		
 		// Both at 45/45 (positive x, positive y)
 		actual = forwardKinematics(new int[]{45, 45, 0});
-		Point3D target = new Point3D(L1*scale/root2, L2+L1*scale/root2);
-		Assert.assertTrue(target+"->"+actual,
+		Point3D target = new Point3D(L1/root2, L2+L1/root2);
+		Assert.assertTrue("expected: "+target+", got: "+actual,
 				target.distance(actual) <= 2);
 		
 		// Negative values (positive x, negative y)
 		actual = forwardKinematics(new int[]{-45, -45, 0});
-		target = new Point3D(L1*scale/root2, -(L2+L1*scale/root2));
-		Assert.assertTrue(target+"->"+actual,
+		target = new Point3D(L1/root2, -(L2+L1/root2));
+		Assert.assertTrue("expected: "+target+", got: "+actual,
 				target.distance(actual) <= 2);
 		
 		// Far angle case (negative x, positive y)
 		actual = forwardKinematics(new int[]{180-45, -45, 0});
-		target = new Point3D(-L1*scale/root2, L2+L1*scale/root2);
-		Assert.assertTrue(target+"->"+actual,
+		target = new Point3D(-L1/root2, L2+L1/root2);
+		Assert.assertTrue("expected: "+target+", got: "+actual,
+				target.distance(actual) <= 2);
+
+		// 3 Dimensions
+		actual = forwardKinematics(new int[]{0,0,180});
+		target = new Point3D(L1+L2,0,2*L3);
+		Assert.assertTrue("expected: "+target+", got: "+actual,
+				target.distance(actual) <= 2);
+
+		// 3 Dimensions in all dimensions
+		actual = forwardKinematics(new int[]{90,90,90});
+		target = new Point3D(-L2,L1-L3,L3);
+		Assert.assertTrue("expected: "+target+", got: "+actual,
+				target.distance(actual) <= 2);
+		
+		// Not as trivial 3D case
+		actual = forwardKinematics(new int[]{45,45,45});
+		target = new Point3D(L1/root2-L3/root2, L2+L1/root2, L3-L3/root2);
+		Assert.assertTrue("expected: "+target+", got: "+actual,
 				target.distance(actual) <= 2);
 		
 	}
@@ -93,15 +113,15 @@ public class TestKinematics extends Kinematics {
 		assertInverse(new Point3D(0,240), new int[]{90,0,0}, new int[]{82,10,0});
 		
 		// Both at 45/45 (positive x, positive y)
-		assertInverse(new Point3D(L1*scale/root2, L2+L1*scale/root2),
+		assertInverse(new Point3D(L1/root2, L2+L1/root2),
 					new int[]{45,45,0}, new int[]{30,30,0});
 		
 		// Negative values (positive x, negative y)
-		assertInverse(new Point3D(L1*scale/root2, -(L2+L1*scale/root2)),
+		assertInverse(new Point3D(L1/root2, -(L2+L1/root2)),
 					new int[]{-45, -45,0}, new int[]{-20,-60,0});
 		
 		// Far angle case (negative x, positive y)
-		assertInverse(new Point3D(-L1*scale/root2, L2+L1*scale/root2),
+		assertInverse(new Point3D(-L1/root2, L2+L1/root2),
 				new int[]{180-45, -45,0}, new int[]{180, -30,0});
 
 		// Degenerate test case
@@ -111,6 +131,18 @@ public class TestKinematics extends Kinematics {
 		// Arbitrary example
 		assertInverse(new Point3D(100,100),
 				new int[]{9,109,0}, new int[]{0, 80,0});
+
+		// 3 Dimensions
+		assertInverse(new Point3D(L1+L2,0,2*L3),
+				new int[]{0,0,180}, new int[]{5,-5,182});
+
+		// 3 Dimensions in all dimensions
+		assertInverse(new Point3D(-L2,L1-L3,L3),
+				new int[]{90,90,90}, new int[]{97,85,100});
+		
+		// Not as trivial 3D case
+		assertInverse(new Point3D(L1/root2-L3/root2, L2+L1/root2, L3-L3/root2),
+				new int[]{45,45,45}, new int[]{37,48,52});
 	}
 	
 	private void assertInverse(Point3D target, int[] expected, int[] hint) {
