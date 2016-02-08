@@ -151,12 +151,13 @@ public class TestKinematics extends Kinematics {
 
 		if (verbose) System.out.println(start);
 		for (Point3D target : line) {
-			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), start.distance(target) <= step_size);
+			if (verbose) System.out.println("Target: " + target);
+			Assert.assertTrue("Distance to next point is too far:" + start.distance(target), start.distance(target) <= 2*step_size);
 
 			theta = inverseKinematics(target,theta);
 			start = forwardKinematics(theta);
 			
-			if (verbose) System.out.println(start);
+			if (verbose) System.out.println("New Location: " + start);
 		}
 		
 		theta = inverseKinematics(final_location, theta);

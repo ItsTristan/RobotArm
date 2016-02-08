@@ -19,7 +19,7 @@ public class Kinematics {
 		double thetaB = Math.toRadians(theta[1]);
 		double thetaC = 0;
 		if (theta.length > 2){
-			thetaC = Math.toRadians(theta[1]);
+			thetaC = Math.toRadians(theta[2]);
 		}
 
 		// == Base Parameters
