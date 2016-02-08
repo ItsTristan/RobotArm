@@ -17,7 +17,10 @@ public class Kinematics {
 	public static Point3D forwardKinematics(int[] theta) {
 		double thetaA = Math.toRadians(theta[0]);
 		double thetaB = Math.toRadians(theta[1]);
-		double thetaC = Math.toRadians(theta[2]);
+		double thetaC = 0;
+		if (theta.length > 2){
+			thetaC = Math.toRadians(theta[1]);
+		}
 
 		// == Base Parameters
 		Matrix TBase = new Matrix(new double[][]{
@@ -100,6 +103,38 @@ public class Kinematics {
 		double cosAngle = (CA*CA +  CB*CB - AB*AB) / (2*CA*CB);
 		int angle = (int)Math.toDegrees(Math.acos(cosAngle));
 		return angle;
+	}
+	/**
+	 * finds center point of the circle given only 3 points on that circle(so any arc)
+	 * @param a leftmost point
+	 * @param b a point on the arc between a and b
+	 * @param c rightmost point
+	 * @return center of circle
+	 */
+	// see math reference: http://www.regentsprep.org/regents/math/geometry/gcg6/RCir.htm
+	public static Point3D getRadiusArc(Point3D a, Point3D b, Point3D c){
+		double slope_ab = (b.x - a.x / b.y - a.y);
+		double slope_bc = (c.x - b.x / c.y - b.y);
+		// line_y1= slope_ab*(x-a.x) + a.y
+		// line_y2= slope_bc*(x-b.x) + b.y
+		// intersection of these lines is at circle center
+		double midx1 = (b.x + a.x)/2;
+		double midy1 = (b.y + a.y)/2;
+		double midx2 = (c.x + b.x)/2;
+		double midy2 = (c.y + b.y)/2;
+		double mid1_slope = -1/slope_ab;
+		double mid2_slope = -1/slope_bc;
+		//Point3D midpoint1 = new Point3D(midx1, midy1);
+		//Point3D midpoint2 = new Point3D(midx2, midy2);
+		
+		//CHECK THIS FOR FUCK UPS!!!
+		//mid1_slope*(x-midx1) + midy1 = mid2_slope*(x-midx2) + midy2 solve for x
+		double centerx = ( (mid1_slope*midx1 - mid2_slope*midx2 - midy1 + midy2) 
+							/ (mid1_slope - mid2_slope) );
+		double centery = mid1_slope*(centerx-midx1) + midy1;
+		Point3D center = new Point3D(centerx, centery);
+		
+		return center;
 	}
 
 //	public static int[] inverseKinematics(Point3D target) {

@@ -1,5 +1,9 @@
 package ca.ualberta;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Collections;
+
 import lejos.hardware.Button;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3TouchSensor;
@@ -8,7 +12,7 @@ import lejos.utility.Delay;
 public class Main {
 	// A is the inner-most, B is the outer
 		private static EV3TouchSensor touchSensor;
-		
+			
 	public static void main(String[] args) {
 		RobotController.initializeMotorZero();
 		while (true){
@@ -17,14 +21,15 @@ public class Main {
 		//getDistance(); 
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
-
+			//testTraceMaze();
+			Point3D[] arcTest = getSensorPoints(3);
+			RobotController.drawArcLine(arcTest[0] , arcTest[1], arcTest[2]);
 //			System.out.println("Move far");
 //			RobotController.moveTo(new Point3D(0,240));
 			
-//			Button.waitForAnyPress();
-			System.out.println("Draw Line");
+//			System.out.println("Draw Line");
 //			RobotController.drawLineBW(new Point3D(230, -70), new Point3D(30,200));
-			drawLineFromPointAngleDist(new Point3D(0,220), -20, 100.0);
+//			drawLineFromPointAngleDist(new Point3D(0,220), -20, 100.0);
 			
 //			System.out.println("Move to midpoint");
 //			moveToMidpoint();
@@ -32,15 +37,42 @@ public class Main {
 			//RobotController.relaxMotors();
 			//System.out.println("RIGHTBEFORELURGE!!!");
 			//Button.waitForAnyPress();
+			RobotController.relaxMotors();
+			System.out.println("Move robot back to initial position and push any button");
+			Button.waitForAnyPress();
+			RobotController.initializeMotorZero();
 		}
+	}
+	/** tests tracing a maze and records all the points in a file so 
+	 * we may repeat it later. 
+	 */
+	private static void testTraceMaze() {
+		String filename = "maze.txt";
+		Point3D[] maze_points = traceMaze();	
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(filename);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		for (int p = 0; p < maze_points.length; p++){
+			if (maze_points[p] != null){
+				out.printf("(%f,%f)\n", maze_points[p].x, maze_points[p].y);
+			}
+		}
+		out.close();
 	}	
 		
-	private static void traceMaze(){
-		int num_nodes = 25;
-		Point3D[] path = getSensorPoints(num_nodes);
-		for ( int i = 1; i < num_nodes; i++ ) {
+	private static Point3D[] traceMaze(){
+		int max_nodes = 30;
+		Point3D[] path = getSensorPoints(max_nodes);
+		for ( int i = 1; i < path.length-1; i++ ) {
+			if (path[i] == null){
+				return path;
+			}
 			RobotController.drawLineBW(path[i-1], path[i]);
-		}	
+		}
+		return path;
 	}
 	/**
 	 * Takes a point, an angles in degrees and a distance and draws a straight line 
@@ -79,7 +111,6 @@ public class Main {
 		int[] theta = RobotController.getJointAngles();
 		System.out.format("target= (%f,%f) \nreal= (%f,%f) \n th = [%d, %d]", 
 				target.x, target.y, end.x, end.y, theta[0], theta[1]);
-		
 	}
 	
 	/**waits for two points selected by pressing sensor button and 
@@ -103,13 +134,15 @@ public class Main {
 	private static Point3D[] getSensorPoints(int num_points) {
 		Point3D[] points = new Point3D[num_points];
 		int pnum = 0;
+		int is_pressed = 1;
 		if (touchSensor == null) {
 			touchSensor = new EV3TouchSensor(SensorPort.S1);
 		}
 		float[] sample = new float[touchSensor.sampleSize()];
-		while (pnum < num_points){
+		System.out.println("select 1st point \n");
+		while (pnum < num_points && Button.getButtons() != Button.ID_ENTER){
 			touchSensor.getTouchMode().fetchSample(sample, 0);  
-			if (sample[0] == 1){
+			if (sample[0] == is_pressed){
 				points[pnum] = RobotController.getLocation();
 				System.out.format("point%d= %f,%f\n", pnum, points[pnum].x, points[pnum].y);
 				pnum++;

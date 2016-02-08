@@ -42,7 +42,7 @@ public class RobotController {
 	 * @param x
 	 * @param y
 	 */
-	public static void moveTo(int x, int y) {
+	public static void moveTo(double x, double y) {
 		moveTo(new Point3D(x,y));
 	}
 	
@@ -65,6 +65,33 @@ public class RobotController {
 		Point3D[] line = Kinematics.createLinePath(start, end);	
 		for (Point3D target : line) {
 			moveTo(target);
+		}
+	}
+	/**
+	 * Given 2 end points of an arc and any other point on the arc can step 
+	 * along and draw the entire arc
+	 * @param start 
+	 * @param mid is any point between start and end that lies on the arc
+	 * @param end
+	 */
+	public static void drawArcLine(Point3D start, Point3D mid, Point3D end){
+		//WAIT HOW DO WE KNOW IF MOVING LEFT TO RIGHT IS INCREASING/DECREASING IN COORDINATES?
+		Point3D center = Kinematics.getRadiusArc(start, mid, end);
+		
+		double radius = center.distance(start);
+		System.out.println("radius: " + radius);
+		System.out.println("center: " + center);
+		double arc_angle = Math.toRadians(Kinematics.getAngleBWlines(center, start, end));
+		double step_size = arc_angle/20; //do: pi, 19/20pi, 18/20pi,...., 1/20pi, 0pi
+		moveTo(start);
+		
+		Point3D circle_start = new Point3D(-1,0);
+		for (int i = 20; i > 0; i--){
+			double next_x = radius*Math.cos(step_size*i);
+			double next_y = radius*Math.sin(step_size*i);
+			double deltax = next_x - circle_start.x;
+			double deltay = next_y - circle_start.y;
+			moveTo(start.x + deltax, start.y + deltay);
 		}
 	}
 	
