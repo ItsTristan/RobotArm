@@ -77,100 +77,124 @@ public class TestKinematics extends Kinematics {
 		
 	}
 	
-	private boolean using_analytic = false;
-	
 	@Test
 	public void testInverseAnalyticKinematics() {
-		using_analytic = true;
-		testInverseKinematics();
+		// Stupid case
+		assertInverseAnalytical(new Point3D(240,0), new int[]{0,0,0});
+		
+		// Slight variation
+		assertInverseAnalytical(new Point3D(240,0), new int[]{0,0,0});
+		
+		// Slight variation
+		assertInverseAnalytical(new Point3D(231,59), new int[]{10,10,0});
+		
+		// Base at 90
+		assertInverseAnalytical(new Point3D(0,240), new int[]{90,0,0});
+		
+		// Both at 45/45 (positive x, positive y)
+		assertInverseAnalytical(new Point3D(L1/root2, L2+L1/root2),
+					new int[]{45,45,0});
+		
+		// Negative values (positive x, negative y)
+		assertInverseAnalytical(new Point3D(L1/root2, -(L2+L1/root2)),
+					new int[]{-45, -45,0});
+		
+		// Far angle case (negative x, positive y)
+		assertInverseAnalytical(new Point3D(-L1/root2, L2+L1/root2),
+				new int[]{180-45, -45,0});
+		
+		// Degenerate test case
+		assertInverseAnalytical(new Point3D(30,30),
+				new int[]{98,180,0});
+		
+		// Arbitrary example
+		assertInverseAnalytical(new Point3D(100,100),
+				new int[]{9,109,0});
 	}
 	
 	@Test
 	public void testInverseNumericalKinematics() {
-		using_analytic = false;
 		// Loop to check for consistency
-		for (int i = 0; i < 100; i++) {
-			testInverseKinematics();
+		for (int i = 0; i < 100; i++)
+		{
+			// Both at 45/45 (positive x, positive y)
+			assertInverseNumerical(new Point3D(L1/root2, L2+L1/root2),
+					new int[]{45,45,0}, new int[]{42,42,0});
+			// Stupid case
+			assertInverseNumerical(new Point3D(240,0), new int[]{0,0,0}, new int[]{0,0,0});
+			
+			// Slight variation
+			assertInverseNumerical(new Point3D(240,0), new int[]{0,0,0}, new int[]{2,2,0});
+			
+			// Slight variation
+			assertInverseNumerical(new Point3D(231,59), new int[]{10,10,0}, new int[]{2,2,0});
+		
+			// Base at 90
+			assertInverseNumerical(new Point3D(0,240), new int[]{90,0,0}, new int[]{82,10,0});
+			
+			
+			// Negative values (positive x, negative y)
+			assertInverseNumerical(new Point3D(L1/root2, -(L2+L1/root2)),
+						new int[]{-45, -45,0}, new int[]{-20,-60,0});
+			
+			// Far angle case (negative x, positive y)
+			assertInverseNumerical(new Point3D(-L1/root2, L2+L1/root2),
+					new int[]{180-45, -45,0}, new int[]{180, -30,0});
+			
+			// Degenerate test case
+			assertInverseNumerical(new Point3D(30,30),
+					new int[]{98,180,0}, new int[]{90, 170,0});
+			
+			// Arbitrary example
+			assertInverseNumerical(new Point3D(100,100),
+					new int[]{9,109,0}, new int[]{0, 80,0});
+			
+			// 3 Dimensions
+			assertInverseNumerical(new Point3D(L1+L2,0,2*L3),
+					new int[]{0,0,180}, new int[]{5,-5,187});
+			
+			// 3 Dimensions in all dimensions
+			assertInverseNumerical(new Point3D(-L2,L1-L3,L3),
+					new int[]{90,90,90}, new int[]{97,85,100});
+			
+			// Not as trivial 3D case
+			assertInverseNumerical(new Point3D(L1/root2-L3/root2, L2+L1/root2, L3-L3/root2),
+					new int[]{45,45,45}, new int[]{37,48,52});
 		}
 	}
-	
-	public void testInverseKinematics() {
-		
-		// All tests are inverse of forward case.
-		// A test passes if the forward kinematics of 
-		// the returned solution is within some threshold
-		
-		// Stupid case
-		assertInverse(new Point3D(240,0), new int[]{0,0,0}, new int[]{0,0,0});
 
-		// Slight variation
-		assertInverse(new Point3D(240,0), new int[]{0,0,0}, new int[]{10,10,0});
-
-		// Slight variation
-		assertInverse(new Point3D(231,59), new int[]{10,10,0}, new int[]{2,2,0});
-		
-		// Base at 90
-		assertInverse(new Point3D(0,240), new int[]{90,0,0}, new int[]{82,10,0});
-		
-		// Both at 45/45 (positive x, positive y)
-		assertInverse(new Point3D(L1/root2, L2+L1/root2),
-					new int[]{45,45,0}, new int[]{30,30,0});
-		
-		// Negative values (positive x, negative y)
-		assertInverse(new Point3D(L1/root2, -(L2+L1/root2)),
-					new int[]{-45, -45,0}, new int[]{-20,-60,0});
-		
-		// Far angle case (negative x, positive y)
-		assertInverse(new Point3D(-L1/root2, L2+L1/root2),
-				new int[]{180-45, -45,0}, new int[]{180, -30,0});
-
-		// Degenerate test case
-		assertInverse(new Point3D(30,30),
-				new int[]{98,180,0}, new int[]{90, 170,0});
-
-		// Arbitrary example
-		assertInverse(new Point3D(100,100),
-				new int[]{9,109,0}, new int[]{0, 80,0});
-
-		// 3 Dimensions
-		assertInverse(new Point3D(L1+L2,0,2*L3),
-				new int[]{0,0,180}, new int[]{5,-5,182});
-
-		// 3 Dimensions in all dimensions
-		assertInverse(new Point3D(-L2,L1-L3,L3),
-				new int[]{90,90,90}, new int[]{97,85,100});
-		
-		// Not as trivial 3D case
-		assertInverse(new Point3D(L1/root2-L3/root2, L2+L1/root2, L3-L3/root2),
-				new int[]{45,45,45}, new int[]{37,48,52});
+	/**
+	 * Asserts that the analytic solution is close enough
+	 * @param target
+	 * @param expected
+	 */
+	private void assertInverseAnalytical(Point3D target, int[] expected) {
+		int[] actual = inverseAnalyticKinematics2D(target);
+		checkInverse(target, expected, actual);
 	}
-	
-	private void assertInverse(Point3D target, int[] expected, int[] hint) {
-		int[] actual;
-		if (using_analytic) {
-			actual = inverseAnalyticKinematics2D(target);
-		} else {
-			actual = inverseNumericalKinematics(target,hint);
-		}
+	/**
+	 * Asserts that the numerical solution is close enough
+	 * @param target
+	 * @param expected
+	 * @param hint
+	 */
+	private void assertInverseNumerical(Point3D target, int[] expected, int[] hint) {
+		int[] actual = inverseNumericalKinematics(target,hint);
+		checkInverse(target, expected, actual);
+	}
 
-		// Check location
+	/**
+	 * Checks that the inverse solution is correct
+	 * @param target
+	 * @param expected
+	 * @param actual
+	 */
+	private void checkInverse(Point3D target, int[] expected, int[] actual) {
 		Point3D where = forwardKinematics(actual);
 		Assert.assertTrue("Solution is not close enough. "+
 		"Got ("+print(actual)+") → "+where+
 		", Expected ("+print(expected)+") → "+target,
 				where.distance(target) <= dist_thresh);
-	}
-
-	private String print(int[] array) {
-		StringBuilder result = new StringBuilder();
-		String sep = "";
-		
-		for (int i = 0; i < array.length; i++) {
-			result.append(sep);
-			result.append(array[i]);
-			sep = ", ";
-		}
-		return result.toString();
 	}
 	
 	@Test
@@ -249,5 +273,17 @@ public class TestKinematics extends Kinematics {
 
 		Assert.assertEquals(B1.normF(), BT.normF(), 10e-4);
 		
+	}
+
+	private String print(int[] array) {
+		StringBuilder result = new StringBuilder();
+		String sep = "";
+		
+		for (int i = 0; i < array.length; i++) {
+			result.append(sep);
+			result.append(array[i]);
+			sep = ", ";
+		}
+		return result.toString();
 	}
 }
