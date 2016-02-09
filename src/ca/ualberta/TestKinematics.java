@@ -7,7 +7,7 @@ import lejos.utility.Matrix;
 
 public class TestKinematics extends Kinematics {
 
-	public static final int dist_thresh = 9;	// Maximum number of mm to be off by in inverse kinematics
+	public static final int dist_thresh = 2;	// Maximum number of mm to be off by in inverse kinematics
 
 	final int L1 = link_lengths[0];
 	final int L2 = link_lengths[1];
@@ -115,11 +115,8 @@ public class TestKinematics extends Kinematics {
 	@Test
 	public void testInverseNumericalKinematics() {
 		// Loop to check for consistency
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 5; i++)
 		{
-			// Both at 45/45 (positive x, positive y)
-			assertInverseNumerical(new Point3D(L1/root2, L2+L1/root2),
-					new int[]{45,45,0}, new int[]{42,42,0});
 			// Stupid case
 			assertInverseNumerical(new Point3D(240,0), new int[]{0,0,0}, new int[]{0,0,0});
 			
@@ -132,6 +129,9 @@ public class TestKinematics extends Kinematics {
 			// Base at 90
 			assertInverseNumerical(new Point3D(0,240), new int[]{90,0,0}, new int[]{82,10,0});
 			
+			// Both at 45/45 (positive x, positive y)
+			assertInverseNumerical(new Point3D(L1/root2, L2+L1/root2),
+					new int[]{45,45,0}, new int[]{42,42,0});
 			
 			// Negative values (positive x, negative y)
 			assertInverseNumerical(new Point3D(L1/root2, -(L2+L1/root2)),
