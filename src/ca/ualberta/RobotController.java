@@ -1,6 +1,9 @@
 package ca.ualberta;
 
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
 import lejos.hardware.Button;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
@@ -76,23 +79,45 @@ public class RobotController {
 	 */
 	public static void drawArcLine(Point3D start, Point3D mid, Point3D end){
 		//WAIT HOW DO WE KNOW IF MOVING LEFT TO RIGHT IS INCREASING/DECREASING IN COORDINATES?
-		Point3D center = Kinematics.getRadiusArc(start, mid, end);
+		Point3D center = Kinematics.getCenterArc(start, mid, end);
 		
 		double radius = center.distance(start);
-		System.out.println("radius: " + radius);
-		System.out.println("center: " + center);
+		System.out.format("radius: %.2f", radius);
+		//System.out.println("center: " + center);
+		
 		double arc_angle = Math.toRadians(Kinematics.getAngleBWlines(center, start, end));
-		double step_size = arc_angle/20; //do: pi, 19/20pi, 18/20pi,...., 1/20pi, 0pi
+		System.out.format("arc angle: %.2f", arc_angle);
+		
+		double step_size = Math.PI/20; //do: pi, 19/20pi, 18/20pi,...., 1/20pi, 0pi
 		moveTo(start);
 		
-		Point3D circle_start = new Point3D(-1,0);
+		String filename = "arc_out.txt";
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(filename);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+						
+		
+		Point3D circle_start = new Point3D(-radius,0);
+		out.printf("start: %.2f,%.2f\n", start.x,start.y);
 		for (int i = 20; i > 0; i--){
 			double next_x = radius*Math.cos(step_size*i);
 			double next_y = radius*Math.sin(step_size*i);
 			double deltax = next_x - circle_start.x;
 			double deltay = next_y - circle_start.y;
-			moveTo(start.x + deltax, start.y + deltay);
+			/*if (step_size*i <= 180 - arc_angle){
+				System.out.println("\ngot here");
+				moveTo(end);
+				break;
+			}*/
+			out.printf("next: %.2f,%.2f \n delta: %.2f,%.2f \n\n", next_x,next_y, deltax, deltay);
+
+			moveTo( start.x + deltax, start.y + deltay);
 		}
+		out.close();
+		moveTo(end);
 	}
 	
 	/**

@@ -112,9 +112,15 @@ public class Kinematics {
 	 * @return center of circle
 	 */
 	// see math reference: http://www.regentsprep.org/regents/math/geometry/gcg6/RCir.htm
-	public static Point3D getRadiusArc(Point3D a, Point3D b, Point3D c){
-		double slope_ab = (b.x - a.x / b.y - a.y);
-		double slope_bc = (c.x - b.x / c.y - b.y);
+	public static Point3D getCenterArc(Point3D a, Point3D b, Point3D c){
+		double slope_ab = 0;
+		double slope_bc = 0;
+		if (b.y != a.y){
+			slope_ab = ( (a.y - b.y) / (a.x - b.x) );
+		}
+		if (c.y != b.y){
+			slope_bc = ( (b.y - c.y) / (b.x - c.x) );
+		}
 		// line_y1= slope_ab*(x-a.x) + a.y
 		// line_y2= slope_bc*(x-b.x) + b.y
 		// intersection of these lines is at circle center
@@ -122,16 +128,15 @@ public class Kinematics {
 		double midy1 = (b.y + a.y)/2;
 		double midx2 = (c.x + b.x)/2;
 		double midy2 = (c.y + b.y)/2;
-		double mid1_slope = -1/slope_ab;
-		double mid2_slope = -1/slope_bc;
-		//Point3D midpoint1 = new Point3D(midx1, midy1);
-		//Point3D midpoint2 = new Point3D(midx2, midy2);
+		double m1_slope = -1/slope_ab;
+		double m2_slope = -1/slope_bc;
+		
 		
 		//CHECK THIS FOR FUCK UPS!!!
 		//mid1_slope*(x-midx1) + midy1 = mid2_slope*(x-midx2) + midy2 solve for x
-		double centerx = ( (mid1_slope*midx1 - mid2_slope*midx2 - midy1 + midy2) 
-							/ (mid1_slope - mid2_slope) );
-		double centery = mid1_slope*(centerx-midx1) + midy1;
+		double centerx = ( (m1_slope*midx1 - m2_slope*midx2 - midy1 + midy2) 
+							/ (m1_slope - m2_slope) );
+		double centery = m1_slope*(centerx-midx1) + midy1;
 		Point3D center = new Point3D(centerx, centery);
 		
 		return center;

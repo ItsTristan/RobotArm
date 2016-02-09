@@ -22,7 +22,9 @@ public class Main {
 		//testFWDByHand(); 
 		//doForward2DbyAngle(90, 90);
 			//testTraceMaze();
+			//Kinematics.getCenterArc(new Point3D(2,-4), new Point3D(6,-2), new Point3D(5,5));
 			Point3D[] arcTest = getSensorPoints(3);
+			Button.waitForAnyPress();
 			RobotController.drawArcLine(arcTest[0] , arcTest[1], arcTest[2]);
 //			System.out.println("Move far");
 //			RobotController.moveTo(new Point3D(0,240));
@@ -34,13 +36,10 @@ public class Main {
 //			System.out.println("Move to midpoint");
 //			moveToMidpoint();
 			Button.waitForAnyPress();
-			//RobotController.relaxMotors();
+			RobotController.relaxMotors();
 			//System.out.println("RIGHTBEFORELURGE!!!");
 			//Button.waitForAnyPress();
-			RobotController.relaxMotors();
-			System.out.println("Move robot back to initial position and push any button");
-			Button.waitForAnyPress();
-			RobotController.initializeMotorZero();
+			
 		}
 	}
 	/** tests tracing a maze and records all the points in a file so 
