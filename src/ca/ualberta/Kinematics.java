@@ -115,10 +115,10 @@ public class Kinematics {
 	public static Point3D getCenterArc(Point3D a, Point3D b, Point3D c){
 		double slope_ab = 0;
 		double slope_bc = 0;
-		if (b.y != a.y){
+		if (b.x != a.x){
 			slope_ab = ( (a.y - b.y) / (a.x - b.x) );
 		}
-		if (c.y != b.y){
+		if (c.x != b.x){
 			slope_bc = ( (b.y - c.y) / (b.x - c.x) );
 		}
 		// line_y1= slope_ab*(x-a.x) + a.y
@@ -130,9 +130,6 @@ public class Kinematics {
 		double midy2 = (c.y + b.y)/2;
 		double m1_slope = -1/slope_ab;
 		double m2_slope = -1/slope_bc;
-		
-		
-		//CHECK THIS FOR FUCK UPS!!!
 		//mid1_slope*(x-midx1) + midy1 = mid2_slope*(x-midx2) + midy2 solve for x
 		double centerx = ( (m1_slope*midx1 - m2_slope*midx2 - midy1 + midy2) 
 							/ (m1_slope - m2_slope) );
@@ -141,10 +138,6 @@ public class Kinematics {
 		
 		return center;
 	}
-
-//	public static int[] inverseKinematics(Point3D target) {
-//		return inverseAnalyticKinematics(target);
-//	}
 
 	public static int[] inverseKinematics(Point3D target, int[] theta0) {
 		return inverseNumericalKinematics(target, theta0);

@@ -18,7 +18,7 @@ public class RobotController {
 	private static RegulatedMotor m_motorB;
 	private static RegulatedMotor m_motorC;
 
-	private static final int defaultDelay = 250;
+	private static final int defaultDelay = 0;
 	private static final int motor_speed = 60;
 	private static final int motor_accel = 20;
 	
@@ -72,25 +72,19 @@ public class RobotController {
 	}
 	/**
 	 * Given 2 end points of an arc and any other point on the arc can step 
-	 * along and draw the entire arc
+	 * along and draw the entire arc.
 	 * @param start 
 	 * @param mid is any point between start and end that lies on the arc
 	 * @param end
 	 */
 	public static void drawArcLine(Point3D start, Point3D mid, Point3D end){
-		//WAIT HOW DO WE KNOW IF MOVING LEFT TO RIGHT IS INCREASING/DECREASING IN COORDINATES?
 		Point3D center = Kinematics.getCenterArc(start, mid, end);
-		
 		double radius = center.distance(start);
-		System.out.format("radius: %.2f", radius);
-		//System.out.println("center: " + center);
-		
 		double arc_angle = Math.toRadians(Kinematics.getAngleBWlines(center, start, end));
-		System.out.format("arc angle: %.2f", arc_angle);
-		
-		double step_size = Math.PI/20; //do: pi, 19/20pi, 18/20pi,...., 1/20pi, 0pi
+		double step_size = arc_angle/20; 
 		moveTo(start);
 		
+		//DEBUG
 		String filename = "arc_out.txt";
 		PrintWriter out = null;
 		try {
@@ -99,22 +93,13 @@ public class RobotController {
 			e.printStackTrace();
 		}
 						
-		
-		Point3D circle_start = new Point3D(-radius,0);
-		out.printf("start: %.2f,%.2f\n", start.x,start.y);
-		for (int i = 20; i > 0; i--){
-			double next_x = radius*Math.cos(step_size*i);
-			double next_y = radius*Math.sin(step_size*i);
-			double deltax = next_x - circle_start.x;
-			double deltay = next_y - circle_start.y;
-			/*if (step_size*i <= 180 - arc_angle){
-				System.out.println("\ngot here");
-				moveTo(end);
-				break;
-			}*/
-			out.printf("next: %.2f,%.2f \n delta: %.2f,%.2f \n\n", next_x,next_y, deltax, deltay);
-
-			moveTo( start.x + deltax, start.y + deltay);
+		double start_angle = Math.atan2(start.y - center.y, start.x - center.x);
+		out.printf("\nstart: %.2f,%.2f\n", start.x,start.y); //debug
+		for (int i = 0; i < 20; i++){
+			double next_x = radius*Math.cos(start_angle-step_size*i) + center.x;
+			double next_y = radius*Math.sin(start_angle-step_size*i) + center.y;
+			out.printf("\nnext: %.2f,%.2f\n",  next_x, next_y); //debug
+			moveTo( next_x, next_y);
 		}
 		out.close();
 		moveTo(end);
