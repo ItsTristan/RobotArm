@@ -54,7 +54,7 @@ public class Main {
 		case 0:
 			// Part 1 - Moves to the given angles and reports
 			// XXX
-			doForward2DbyAngle(-45,-45);
+			doForward2DbyAngle(90,0);
 			break;
 		case 1:
 			// Part 2 - Select point and get distance between them
@@ -70,7 +70,7 @@ public class Main {
 		case 3:
 			// Part 4 - Do inverse kinematics to move to a point
 			// XXX
-			testInverse2D(new Point3D(70,70));
+			testInverse2D(new Point3D(200,100));
 			break;
 		case 4:
 			// Part 5 - Moves to the midpoint between two selected points
@@ -95,8 +95,8 @@ public class Main {
 		case 8:
 			// Part 9 - Inverse 3D kinematics
 			// XXX
-			RobotController.moveTo3D(new Point3D(35, 200, 24));
-			System.out.println("Point: " + RobotController.getLocation());
+			RobotController.moveTo3D(new Point3D(150,0,50));
+			System.out.println("Point: " + RobotController.getLocation3());
 			break;
 		case 9:
 			// Part ? - Trace Labyrinth
@@ -238,7 +238,7 @@ public class Main {
 	 * @return 
 	 */
 	private static void testInverse2D(Point3D target) {
-		RobotController.moveTo(target);
+		RobotController.moveTo(target.x, target.y);
 		
 		Point3D end = RobotController.getLocation();
 		System.out.format("target= (" + target + ")\n"

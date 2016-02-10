@@ -7,7 +7,7 @@ import lejos.utility.Matrix;
 
 public class TestKinematics extends Kinematics {
 
-	public static final int dist_thresh = 2;	// Maximum number of mm to be off by in inverse kinematics
+	public static final int dist_thresh = 10;	// Maximum number of mm to be off by in inverse kinematics
 
 	final int L1 = link_lengths[0];
 	final int L2 = link_lengths[1];
@@ -75,6 +75,14 @@ public class TestKinematics extends Kinematics {
 		Assert.assertTrue("expected: "+target+", got: "+actual,
 				target.distance(actual) <= 2);
 		
+//		int[] test = inverseNumericalKinematics(new Point3D(150,100,50), new int[] {0,0,0});
+//		actual = forwardKinematics(test);
+//		target = new Point3D(150,100,50);
+//		Assert.assertTrue("expected: "+target+", got: "+actual,
+//				target.distance(actual) <= 2);
+		
+		actual = forwardKinematics(inverseNumericalKinematics(new Point3D(150,0,50), new int[]{0,0,0}));
+		System.out.println(actual);
 	}
 	
 	@Test

@@ -200,9 +200,20 @@ public class Kinematics {
 
 		Matrix theta = new Matrix(new double[] { thetaA, thetaB, thetaC }, 3);
 		
-		for (int i = 0; i < 20; i++) {
+		if (target.x == 0) {
+			target = new Point3D(target.x+Math.random(), target.y, target.z);
+		}
+		if (target.y == 0) {
+			target = new Point3D(target.x, target.y+Math.random(), target.z);
+		}
+		if (target.z == 0) {
+			target = new Point3D(target.x, target.y, target.z+Math.random());
+		}
+		
+		for (int i = 0; i < 100; i++) {
 			// Error term
 			Point3D actual = forwardKinematics(toIntArray(theta.times(180 / Math.PI)));
+			
 			Matrix dY = target.toMatrix().minus(actual.toMatrix());
 
 			if (dY.normF() < (TestKinematics.dist_thresh))

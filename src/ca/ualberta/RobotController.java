@@ -21,7 +21,7 @@ public class RobotController {
 	private static final int motor_speed = 60;
 	private static final int motor_accel = 20;
 	
-	private static final double[] gear_ratios = {15d/30d, 1d, 1d};
+	private static final double[] gear_ratios = {15d/30d, 1d, -1d};
 
 	private static EV3TouchSensor touchSensor;
 	
@@ -152,7 +152,7 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveNumerical3D(Point3D p) {
-		int[] theta = Kinematics.inverseKinematics(p, getJointAngles3());
+		int[] theta = Kinematics.inverseNumericalKinematics(p, getJointAngles3());
 		rotateTo(theta);
 	}
 	
@@ -179,6 +179,17 @@ public class RobotController {
 		motorA.setSpeed(motor_speed);
 		motorB.setSpeed(motor_speed);
 		motorC.setSpeed(motor_speed);
+		
+		for (int i = 0; i < theta.length; i++) {
+			if (theta[i] > 180) {
+				theta[i] -= 360;
+			} else if (theta[i] < -180) {
+				theta[i] += 360;
+			}
+			System.out.println("theta" + i + ": " + theta[i]);
+			System.out.println("tacho" + i + ": " + (theta[i]/gear_ratios[i]));
+		}
+		Delay.msDelay(5000);
 
 		motorA.rotateTo((int) ( theta[0] / gear_ratios[0]),true);
 		motorB.rotateTo((int) ( theta[1] / gear_ratios[1]),false);	// last one should be false
@@ -200,6 +211,10 @@ public class RobotController {
 	public static Point3D getLocation() {
 		return Kinematics.forwardKinematics(getJointAngles());
 	}
+	
+	public static Point3D getLocation3() {
+		return Kinematics.forwardKinematics(getJointAngles3());
+	}
 
 	/**
 	 * Returns the current joint angles, accounting for the gear ratios.
@@ -219,7 +234,7 @@ public class RobotController {
 		return new int[] {
 				(int) (getMotorA().getTachoCount()*gear_ratios[0]),
 				(int) (getMotorB().getTachoCount()*gear_ratios[1]),
-				(int) (getMotorB().getTachoCount()*gear_ratios[2]),
+				(int) (getMotorC().getTachoCount()*gear_ratios[2]),
 		};
 	}
 	
