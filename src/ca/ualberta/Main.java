@@ -2,9 +2,9 @@ package ca.ualberta;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Collections;
 
 import lejos.hardware.Button;
+import lejos.hardware.Sound;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.utility.Delay;
@@ -12,34 +12,168 @@ import lejos.utility.Delay;
 public class Main {
 	// A is the inner-most, B is the outer
 		private static EV3TouchSensor touchSensor;
+		public static int num_modes = 12;
 			
 	public static void main(String[] args) {
 		RobotController.initializeMotorZero();
+		int mode = 0;
+		System.out.println("\n\nMainMenu:");
+		
 		while (true){
-		// maybe make menu on brick??
-		//doAngleBWlines(); 
-		//getDistance(); 
-		//testFWDByHand(); 
-		//doForward2DbyAngle(90, 90);
-			//testTraceMaze();
-			//Kinematics.getCenterArc(new Point3D(2,-4), new Point3D(6,-2), new Point3D(5,5));
-			Point3D[] arcTest = getSensorPoints(3);
-			Button.waitForAnyPress();
-			RobotController.drawArcLine(arcTest[0] , arcTest[1], arcTest[2]);
-//			System.out.println("Move far");
-//			RobotController.moveTo(new Point3D(0,240));
+			printModeInfo(mode);
 			
-//			System.out.println("Draw Line");
-//			RobotController.drawLineBW(new Point3D(230, -70), new Point3D(30,200));
-//			drawLineFromPointAngleDist(new Point3D(0,220), -20, 100.0);
-			
-//			System.out.println("Move to midpoint");
-//			moveToMidpoint();
-			Button.waitForAnyPress();
-			RobotController.relaxMotors();
-			//System.out.println("RIGHTBEFORELURGE!!!");
-			//Button.waitForAnyPress();
-			
+			int button = Button.waitForAnyPress();
+			if (button == Button.ID_ENTER) {
+				selectMode(mode);
+				Button.waitForAnyPress();
+				RobotController.resetMotors();
+				System.out.println("\n\nMainMenu:");
+				
+			} else if (button == Button.ID_UP) {
+				mode = (mode+num_modes-1) % num_modes;
+			} else if (button == Button.ID_DOWN) {
+				mode = (mode+1) % num_modes;
+			} else if (button == Button.ID_ESCAPE) {
+				break;
+			}
+		}
+		
+		return;
+	}
+	
+	/**
+	 * Menus
+	 * @param choice
+	 */
+	public static void selectMode(int choice) {
+		// Clear screen and print choice
+		System.out.println("\n\n\n\n\n\n\n");
+		printModeInfo(choice);
+		
+		switch(choice) {
+		case 0:
+			// Part 1 - Moves to the given angles and reports
+			// XXX
+			doForward2DbyAngle(-45,-45);
+			break;
+		case 1:
+			// Part 2 - Select point and get distance between them
+			getDistance();
+			break;
+		case 2:
+			// Part 3 - First is intersecting, second and third are arms
+			// Reports the angle between the two lines at the intersection
+			doAngleBWlines();
+			break;
+		// XXX To change to analytic solution, change the default
+		// 		motion type in RobotController.moveTo
+		case 3:
+			// Part 4 - Do inverse kinematics to move to a point
+			// XXX
+			testInverse2D(new Point3D(70,70));
+			break;
+		case 4:
+			// Part 5 - Moves to the midpoint between two selected points
+			moveToMidpoint();
+			break;
+		case 5:
+			// Part 6 - Given two points, draws a straight line
+			// XXX
+			RobotController.drawLineBW(new Point3D(230, 70), new Point3D(30, 200));
+			break;
+		case 6:
+			// Part 7 - Given a point, an angle, and a distance, draws
+			// a straight line from point 
+			// XXX
+			drawLineFromPointAngleDist(new Point3D(0,220), -20, 200);
+			break;
+		case 7:
+			// Part 8 - Draw an arc between 3 points
+			// XXX
+			RobotController.drawArcLine(new Point3D(180,-150), new Point3D(200,0), new Point3D(100,150));
+			break;
+		case 8:
+			// Part 9 - Inverse 3D kinematics
+			// XXX
+			RobotController.moveTo3D(new Point3D(35, 200, 24));
+			System.out.println("Point: " + RobotController.getLocation());
+			break;
+		case 9:
+			// Part ? - Trace Labyrinth
+			traceMaze();
+			break;
+		case 10:
+			// Part ? - Forward by Hand
+			testFWDByHand();
+			break;
+		case 11:
+			// Part ? - Test Trace Maze
+			testTraceMaze();
+			break;
+		default:
+			System.out.println("Unknown mode?");
+			Sound.buzz();
+			break;
+		}
+	}
+	
+	public static void printModeInfo(int choice) {
+		System.out.print(choice + ": ");
+		switch(choice) {
+		case 0:
+			// Part 1 - Moves to the given angles and reports
+			System.out.println("Fwd by Angle");
+			break;
+		case 1:
+			// Part 2 - Select point and get distance between them
+			System.out.println("dist2Point");
+			break;
+		case 2:
+			// Part 3 - First is intersecting, second and third are arms
+			// Reports the angle between the two lines at the intersection
+			System.out.println("angle BW Lines");
+			break;
+		case 3:
+			// Part 4 - Do inverse kinematics to move to a point
+			System.out.println("Inv 2D Kin");
+			break;
+		case 4:
+			// Part 5 - Moves to the midpoint between two selected points
+			System.out.println("Midpoint");
+			break;
+		case 5:
+			// Part 6 - Given two points, draws a straight line
+			System.out.println("2pt Line");
+			break;
+		case 6:
+			// Part 7 - Given a point, an angle, and a distance, draws
+			// a straight line from point 
+			System.out.println("Pt/Angle Line");
+			break;
+		case 7:
+			// Part 8 - Draw an arc between 3 points
+			System.out.println("Draw Arc");
+			break;
+		case 8:
+			// Part 9 - Inverse 3D kinematics
+			System.out.println("Inv 3D Kin");
+			break;
+		case 9:
+			// Part ? - Trace Labyrinth
+			System.out.println("Labyrinth");
+			break;
+		case 10:
+			// Part ? - Forward by Hand
+			System.out.println("Test Fwd man.");
+			break;
+		case 11:
+			// Part ? - Test Trace Maze
+			System.out.println("DBG: Labyrinth");
+			break;
+		default:
+			System.out.println("Unknown mode?");
+			Sound.buzz();
+			break;
 		}
 	}
 	/** tests tracing a maze and records all the points in a file so 
@@ -107,9 +241,8 @@ public class Main {
 		RobotController.moveTo(target);
 		
 		Point3D end = RobotController.getLocation();
-		int[] theta = RobotController.getJointAngles();
-		System.out.format("target= (%f,%f) \nreal= (%f,%f) \n th = [%d, %d]", 
-				target.x, target.y, end.x, end.y, theta[0], theta[1]);
+		System.out.format("target= (" + target + ")\n"
+						+ "real= (" + end + ")\n");
 	}
 	
 	/**waits for two points selected by pressing sensor button and 
@@ -148,6 +281,8 @@ public class Main {
 			}
 			Delay.msDelay(300);
 		}
+		touchSensor.close();
+		touchSensor = null;
 		return points;
 	}
 	
@@ -166,10 +301,8 @@ public class Main {
 		RobotController.rotateTo(new int[] {angleA, angleB});
 		Delay.msDelay(200);
 		
-		int[] theta = RobotController.getJointAngles();
-		p = Kinematics.forwardKinematics(new int[]{theta[0], theta[1]});
-		System.out.format("x = %f \ny= %f \nTachoA: %d \nTachoB: %d\n", p.x,p.y,theta[0], theta[1] );
-		Button.waitForAnyPress();
+		p = RobotController.getLocation();
+		System.out.format("x = %f \ny= %f\n", p.x,p.y);
 	}
 
 	private static void testFWDByHand() {

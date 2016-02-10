@@ -220,60 +220,6 @@ public class TestKinematics extends Kinematics {
 		
 		Assert.assertTrue(forwardKinematics(theta).distance(final_location) <= dist_thresh);
 	}
-	
-	@Test
-	public void testBroydenUpdate() {
-		// No change
-		Matrix B0 = new Matrix(new double[][] {
-			{1,0,0},
-			{0,1,0},
-			{0,0,1}
-		});
-		Matrix deltaF = new Matrix(new double[]{1,1,1},3);
-		Matrix deltaX = new Matrix(new double[]{1,1,1},3);
-		Matrix B1 = updateBroydenStep(B0, deltaF, deltaX);
-
-		System.out.println(matrixToString(B1));
-		System.out.println(matrixToString(B0));
-		Assert.assertEquals(B0.normF(), B1.normF(), 10e-14);
-		
-		// DeltaF = 0
-		B0 = new Matrix(new double[][] {
-			{1,0,0},
-			{0,1,0},
-			{0,0,1}
-		});
-		deltaF = new Matrix(new double[]{0,0,0},3);
-		deltaX = new Matrix(new double[]{1,1,1},3);
-		B1 = updateBroydenStep(B0, deltaF, deltaX);
-		
-		Matrix BT = new Matrix(new double[][] {
-			{ 2d/3d,  -1d/3d,  -1d/3d},
-			{-1d/3d,   2d/3d,  -1d/3d},
-			{-1d/3d,  -1d/3d,   2d/3d},
-		});
-		
-		Assert.assertEquals(B1.normF(), BT.normF(), 10e-14);
-		
-		// Weirder case
-		B0 = new Matrix(new double[][] {
-			{0,1,2},
-			{1,2,0},
-			{2,0,1}
-		});
-		deltaF = new Matrix(new double[]{-1,-2,-3},3);
-		deltaX = new Matrix(new double[]{3,2,1},3);
-		B1 = updateBroydenStep(B0, deltaF, deltaX);
-		
-		BT = new Matrix(new double[][] {
-			{-1.0714, 0.2857, 1.6429},
-			{ 0.0714,-1.2857, 0.3571},
-			{-1.1429, 0.5714,-0.7143},
-		});
-
-		Assert.assertEquals(B1.normF(), BT.normF(), 10e-4);
-		
-	}
 
 	private String print(int[] array) {
 		StringBuilder result = new StringBuilder();

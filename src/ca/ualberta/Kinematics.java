@@ -2,6 +2,8 @@ package ca.ualberta;
 
 import java.io.File;
 
+import lejos.hardware.Button;
+import lejos.utility.Delay;
 import lejos.utility.Matrix;
 
 public class Kinematics {
@@ -111,7 +113,11 @@ public class Kinematics {
 	}
 
 	public static int[] inverseKinematics(Point3D target, int[] theta0) {
-		return inverseNumericalKinematics(target, theta0);
+		if (theta0.length == 2) {
+			return inverseAnalyticKinematics2D(target);
+		} else {
+			return inverseNumericalKinematics(target, theta0);
+		}
 	}
 
 	/**
@@ -152,8 +158,9 @@ public class Kinematics {
 	 */
 	public static int[] inverseNumericalKinematics2D(Point3D target,
 			int[] theta0) {
-		double[] theta = new double[theta0.length];
-		int[] round = new int[theta0.length];
+		double[] theta = new double[2];
+		int[] round = new int[3];
+		round[2] = 0;
 
 		// Copy theta0 to angles
 		for (int j = 0; j < theta.length; j++)
@@ -166,13 +173,13 @@ public class Kinematics {
 			round = toIntArray(angles.times(180d / Math.PI));
 			Point3D actual = forwardKinematics(round);
 			Matrix error = new Matrix(new double[] { target.x - actual.x,
-					target.y - actual.y, 0 }, 3);
+					target.y - actual.y}, 2);
 
 			// If error is small enough, stop
 			if (error.normF() <= Math.sqrt(TestKinematics.dist_thresh)) {
 				break;
 			}
-
+			
 			// Solve for delta theta
 			Matrix delta = getInverseNumerical2DStep(error, angles);
 
@@ -193,7 +200,7 @@ public class Kinematics {
 
 		Matrix theta = new Matrix(new double[] { thetaA, thetaB, thetaC }, 3);
 		
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 20; i++) {
 			// Error term
 			Point3D actual = forwardKinematics(toIntArray(theta.times(180 / Math.PI)));
 			Matrix dY = target.toMatrix().minus(actual.toMatrix());
@@ -343,27 +350,6 @@ public class Kinematics {
 		return res.toString();
 	}
 
-	/**
-	 * Updates the Broyden approximation for the Jacobian. Note: if you swap
-	 * deltaF and deltaX and have B be the approximate inverse Jacobian, then
-	 * this update will return an approximation for the inverse Jacobian, per
-	 * the "bad" Broyden method.
-	 * 
-	 * @return
-	 */
-	public static Matrix updateBroydenStep(Matrix B, Matrix deltaF,
-			Matrix deltaX) {
-		// (df - B*dx) / (dx*B*dF)
-		Matrix num = deltaF.minus(B.times(deltaX));
-		double denom = 1 / Math.pow(deltaX.normF(), 2);
-
-		Matrix outer = num.times(deltaX.transpose());
-
-		Matrix dB = outer.times(denom);
-
-		return B.plus(dB);
-	}
-
 	private static int[] toIntArray(Matrix vector) {
 		double[] array = vector.getColumnPackedCopy();
 		int[] result = new int[array.length];
@@ -386,7 +372,7 @@ public class Kinematics {
 		// Perturb the angle to avoid singular points
 		angles = angles.plus(Matrix.random(angles.getRowDimension(), 1));
 
-		double[][] Jac = new double[3][2];
+		double[][] Jac = new double[2][2];
 		// dx/d0
 		Jac[0][0] = -link_lengths[0] * Math.sin(angles.get(0, 0))
 				- link_lengths[1]
@@ -400,44 +386,10 @@ public class Kinematics {
 		Jac[1][1] = link_lengths[1]
 				* Math.cos(angles.get(0, 0) + angles.get(1, 0));
 
-		Jac[2][0] = 0;
-		Jac[2][1] = 0;
-
 		Matrix J = new Matrix(Jac);
 
 		// Solve for delta Theta
 		return J.solve(error);
-	}
-
-	/**
-	 * Gives one update step, d(theta), for the given target point and theta0
-	 * values
-	 * 
-	 * @param error
-	 * @param angles
-	 *            , in radians
-	 * @return
-	 */
-	public static double[] getInverseNumericalStep(double[] error,
-			double[] angles) {
-		return getInverseNumerical2DStep(new Matrix(error, error.length),
-				new Matrix(angles, angles.length)).getColumnPackedCopy();
-	}
-
-	/**
-	 * Gives one update step, d(theta), for the given target point and theta0
-	 * values
-	 * 
-	 * @param error
-	 * @param angles
-	 *            , in degrees
-	 * @return
-	 */
-	public static double[] getInverseNumericalStep(double[] error, int[] angles) {
-		double[] thetas = new double[angles.length];
-		for (int i = 0; i < thetas.length; i++)
-			thetas[i] = Math.toRadians(angles[i]);
-		return getInverseNumericalStep(error, thetas);
 	}
 
 	/**

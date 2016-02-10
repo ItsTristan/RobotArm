@@ -4,7 +4,6 @@ package ca.ualberta;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-import lejos.hardware.Button;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.port.SensorPort;
@@ -22,7 +21,7 @@ public class RobotController {
 	private static final int motor_speed = 60;
 	private static final int motor_accel = 20;
 	
-	private static final double[] gear_ratios = {15d/30d, 1d};
+	private static final double[] gear_ratios = {15d/30d, 1d, 1d};
 
 	private static EV3TouchSensor touchSensor;
 	
@@ -40,22 +39,46 @@ public class RobotController {
 		motorA.flt();
 		motorB.flt();
 	}
+	
+	public static void resetMotors() {
+		System.out.println("Resetting...");
+		rotateTo(new int[] {0,0,0}, 300);
+		relaxMotors();
+		getMotorA().close();
+		m_motorA = null;
+		
+		getMotorB().close();
+		m_motorB = null;
+		
+		getMotorC().close();
+		m_motorC = null;
+	}
 	/***
 	 * Moves the end effector to the point (x,y)
 	 * @param x
 	 * @param y
 	 */
 	public static void moveTo(double x, double y) {
-		moveTo(new Point3D(x,y));
+		moveAnalytic(new Point3D(x,y));
 	}
-	
+
 	/**
 	 * Moves the end effector to the point p
 	 * @param p
 	 */
 	public static void moveTo(Point3D p) {
 		//System.out.println("Move to " + p);
-		moveAnalytic(p);
+		moveNumerical(p);
+	}
+	
+	/**
+	 * Moves the end effector to the point p
+	 * @param p
+	 */
+	public static void moveTo3D(Point3D p) {
+		//System.out.println("Move to " + p);
+		System.out.println("Moving in 3D");
+		moveNumerical3D(p);
 	}
 	
 	/**
@@ -64,7 +87,7 @@ public class RobotController {
 	 * @param final_location
 	 */
 	public static void drawLineBW(Point3D start, Point3D end) {
-		System.out.format("start: %f,%f \nend: %f,%f \n", start.x, start.y, end.x, end.y);
+		System.out.format("start: " + start + "\nend: "+end+"\n");
 		Point3D[] line = Kinematics.createLinePath(start, end);	
 		for (Point3D target : line) {
 			moveTo(target);
@@ -120,9 +143,16 @@ public class RobotController {
 	 * @param p
 	 */
 	public static void moveNumerical(Point3D p) {
-		System.out.println("Numeric Sol.");
-		System.out.println("Point:" + p.x + "," + p.y);
 		int[] theta = Kinematics.inverseKinematics(p, getJointAngles());
+		rotateTo(theta);
+	}
+	/**
+	 * Moves the end effector to the point p
+	 * using an analytic solution
+	 * @param p
+	 */
+	public static void moveNumerical3D(Point3D p) {
+		int[] theta = Kinematics.inverseKinematics(p, getJointAngles3());
 		rotateTo(theta);
 	}
 	
@@ -139,16 +169,25 @@ public class RobotController {
 	 */
 	public static void rotateTo(int[] theta, int delay) {
 		RegulatedMotor motorA = getMotorA();
-		RegulatedMotor motorB = getMotorB();	
+		RegulatedMotor motorB = getMotorB();
+		RegulatedMotor motorC = getMotorC();
 
 		motorA.setAcceleration(motor_accel);
 		motorB.setAcceleration(motor_accel);
+		motorC.setAcceleration(motor_accel);
 
 		motorA.setSpeed(motor_speed);
 		motorB.setSpeed(motor_speed);
-		
+		motorC.setSpeed(motor_speed);
+
 		motorA.rotateTo((int) ( theta[0] / gear_ratios[0]),true);
 		motorB.rotateTo((int) ( theta[1] / gear_ratios[1]),false);	// last one should be false
+		
+		if (theta.length == 2) {
+			motorC.rotateTo(0, false);
+		} else {
+			motorC.rotateTo((int) (theta[2] / gear_ratios[2]), false);
+		}
 		
 		Delay.msDelay(delay);
 	}
@@ -169,7 +208,18 @@ public class RobotController {
 	public static int[] getJointAngles() {
 		return new int[] {
 				(int) (getMotorA().getTachoCount()*gear_ratios[0]),
-				(int) (getMotorB().getTachoCount()*gear_ratios[1])
+				(int) (getMotorB().getTachoCount()*gear_ratios[1]),
+		};
+	}
+	/**
+	 * Returns the current joint angles, accounting for the gear ratios.
+	 * @return
+	 */
+	public static int[] getJointAngles3() {
+		return new int[] {
+				(int) (getMotorA().getTachoCount()*gear_ratios[0]),
+				(int) (getMotorB().getTachoCount()*gear_ratios[1]),
+				(int) (getMotorB().getTachoCount()*gear_ratios[2]),
 		};
 	}
 	
