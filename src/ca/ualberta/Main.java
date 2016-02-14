@@ -14,6 +14,13 @@ public class Main {
 		private static EV3TouchSensor touchSensor;
 		public static int num_modes = 12;
 			
+	/**
+	 * Displays the main menu and allows the user to select
+	 * options.
+	 * Up/Down selects the previous/next mode, respectively
+	 * Enter runs the currently selected option
+	 * Back quits the program.
+	 */
 	public static void main(String[] args) {
 		RobotController.initializeMotorZero();
 		int mode = 0;
@@ -42,8 +49,8 @@ public class Main {
 	}
 	
 	/**
-	 * Menus
-	 * @param choice
+	 * Selects a menu option given some integer choice
+	 * @param choice the option to select
 	 */
 	public static void selectMode(int choice) {
 		// Clear screen and print choice
@@ -117,6 +124,10 @@ public class Main {
 		}
 	}
 	
+	/**
+	 * Displays the name of the mode given by choice.
+	 * @param choice the menu option to display the name of.
+	 */
 	public static void printModeInfo(int choice) {
 		System.out.print(choice + ": ");
 		switch(choice) {
@@ -312,6 +323,12 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Converts two bitmasks into a boolean value.
+	 * @param source mask containing the bit information.
+	 * @param flag mask to compare against.
+	 * @return true if the two inputs share some flags.
+	 */
 	public static boolean check_fields(int source, int flag) {
 		return (source & flag) != 0;
 	}
