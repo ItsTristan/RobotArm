@@ -29,6 +29,7 @@ public class Point3D {
         this.z = z;
     }
     
+    // point initialized from a matrix (3x1 vector)
     public Point3D(Matrix p) {
     	this.x = p.get(0,0);
     	this.y = p.get(1,0);
@@ -52,6 +53,10 @@ public class Point3D {
     public String toString() {
     	return String.format("(%.2f, %.2f, %.2f)", x,y,z);
     } 
+    /**
+     * checks if this point is the same as some object.
+     * two points are the same if their distance is approximately 0.
+     */
     public boolean equals(Object other){
     	// Make sure the object we're comparing is the right type
     	if (!(other instanceof Point3D))
@@ -62,18 +67,31 @@ public class Point3D {
     	return this.distance(that) < Math.pow(10, -13);
     }
     
+    /**
+     * Subtracts one point from another as vector operations. Used for
+     * offsetting a point by an origin.
+     */
     public Point3D minus(Point3D that) {
     	return new Point3D(this.x - that.x, this.y - that.y, this.z - that.z);
     }
     
+    /**
+     * Converts the point into an array of doubles
+     */
     public double[] toDouble() {
     	return new double[] {this.x, this.y, this.z};
     }
     
+    /**
+     * Converts the point into a matrix of homogeneous coordinates.
+     */
     public Matrix toHomogenousCoords() {
     	return new Matrix(new double[] {this.x, this.y, this.z, 1}, 4);
     }
 
+	/**
+	 * Converts the point into a matrix (vector) of 3 points.
+	 */
 	public Matrix toMatrix() {
     	return new Matrix(new double[] {this.x, this.y, this.z}, 3);
 	}
