@@ -112,6 +112,15 @@ public class Kinematics {
 		return center;
 	}
 
+	/**
+	 * Automatically selects an appropriate inverse kinematics function
+	 * given the number of theta values given.
+	 * @param target The point to move the arm to
+	 * @param theta0 the initial theta guess. If the length is 2, the analytic
+	 * 	solution is used. Otherwise, the numerical solution is used. This
+	 * 	should be length 2 or 3.
+	 * @return the joint angles required to reach target.
+	 */
 	public static int[] inverseKinematics(Point3D target, int[] theta0) {
 		if (theta0.length == 2) {
 			return inverseAnalyticKinematics2D(target);
@@ -152,11 +161,12 @@ public class Kinematics {
 	}
 
 	/**
-	 * Solves the inverse kinematics problem using Newton's method.
+	 * Solves the inverse kinematics problem using Newton's method for
+	 * the 2D problem.
 	 * 
-	 * @param target
-	 * @param theta0
-	 * @return
+	 * @param target point to move to
+	 * @param theta0 an initial guess close to the real solution.
+	 * @return The joint angle required that gets to the target.
 	 */
 	public static int[] inverseNumericalKinematics2D(Point3D target,
 			int[] theta0) {
@@ -195,6 +205,14 @@ public class Kinematics {
 		return toIntArray(angles.times(180d / Math.PI));
 	}
 
+	/**
+	 * Solves the inverse kinematics problem for 3 DOF. Uses a combination
+	 * of Newton's method and gradient descent where appropriate.
+	 * 
+	 * @param target the point to try to move to
+	 * @param theta0 joint angles that are close to the solution
+	 * @return an int array of 3 joint angles to rotate to.
+	 */
 	public static int[] inverseNumericalKinematics(Point3D target, int[] theta0) {
 		double thetaA = Math.toRadians(theta0[0]);
 		double thetaB = Math.toRadians(theta0[1]);
@@ -282,9 +300,9 @@ public class Kinematics {
 	}
 
 	/**
-	 * Homogenous coordinate matrix generators
-	 * @param theta
-	 * @return
+	 * Homogenous coordinate matrix generator for translation
+	 * @param p point to translate by
+	 * @return the translation matrix that moves to that point.
 	 */
 	public static Matrix translate(Point3D p) {
 		return new Matrix(new double[][] {
@@ -294,6 +312,13 @@ public class Kinematics {
 				{ 0, 0, 0, 1},
 		});
 	}
+	/**
+	 * Homogenous coordinate matrix generator for translation
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @return the translation matrix that moves to that point.
+	 */
 	public static Matrix translate(double x, double y, double z) {
 		return new Matrix(new double[][] {
 				{ 1, 0, 0, x},
@@ -302,6 +327,12 @@ public class Kinematics {
 				{ 0, 0, 0, 1},
 		});
 	}
+	
+	/**
+	 * Homogenous coordinate matrix generator for rotation in X
+	 * @param theta amount to rotate by
+	 * @return the rotation matrix that rotates that angle
+	 */
 	public static Matrix rotX(double theta) {
 		return new Matrix(new double[][] {
 				{ 1, 0, 0, 0 },
@@ -309,6 +340,11 @@ public class Kinematics {
 				{ 0, Math.sin(theta), Math.cos(theta), 0 },
 				{ 0, 0, 0, 1 } });
 	}
+	/**
+	 * Homogenous coordinate matrix generator for rotation in Y
+	 * @param theta amount to rotate by
+	 * @return the rotation matrix that rotates that angle
+	 */
 	public static Matrix rotY(double theta) {
 		return new Matrix(new double[][] {
 				{ Math.cos(theta), 0, -Math.sin(theta), 0 },
@@ -316,6 +352,11 @@ public class Kinematics {
 				{ Math.sin(theta), 0, Math.cos(theta), 0 },
 				{ 0, 0, 0, 1 } });
 	}
+	/**
+	 * Homogenous coordinate matrix generator for rotation in Z
+	 * @param theta amount to rotate by
+	 * @return the rotation matrix that rotates that angle
+	 */
 	public static Matrix rotZ(double theta) {
 		return new Matrix(new double[][] {
 				{ Math.cos(theta), -Math.sin(theta), 0, 0},
@@ -323,6 +364,12 @@ public class Kinematics {
 				{ 0, 0, 1, 0 },
 				{ 0, 0, 0, 1 } });
 	}
+	/**
+	 * Homogenous coordinate matrix generator for the derivative
+	 * of the rotation matrix in X
+	 * @param theta amount to rotate by
+	 * @return the derivative of the rotation matrix that rotates that angle
+	 */
 	public static Matrix drotX(double theta) {
 		return new Matrix(new double[][] {
 				{ 0, 0, 0, 0 },
@@ -330,6 +377,12 @@ public class Kinematics {
 				{ 0, Math.cos(theta), -Math.sin(theta), 0 },
 				{ 0, 0, 0, 0 } });
 	}
+	/**
+	 * Homogenous coordinate matrix generator for the derivative
+	 * of the rotation matrix in Y
+	 * @param theta amount to rotate by
+	 * @return the derivative of the rotation matrix that rotates that angle
+	 */
 	public static Matrix drotY(double theta) {
 		return new Matrix(new double[][] {
 				{ -Math.sin(theta), 0, -Math.cos(theta), 0 },
@@ -337,6 +390,12 @@ public class Kinematics {
 				{ Math.cos(theta), 0, -Math.sin(theta), 0 },
 				{ 0, 0, 0, 0 } });
 	}
+	/**
+	 * Homogenous coordinate matrix generator for the derivative
+	 * of the rotation matrix in Z
+	 * @param theta amount to rotate by
+	 * @return the derivative of the rotation matrix that rotates that angle
+	 */
 	public static Matrix drotZ(double theta) {
 		return new Matrix(new double[][] {
 				{ -Math.sin(theta), -Math.cos(theta), 0, 0 },
@@ -345,6 +404,11 @@ public class Kinematics {
 				{ 0, 0, 0, 0 } });
 	}
 	
+	/**
+	 * Converts a matrix to a string for convenient debugging and output.
+	 * @param M matrix to print
+	 * @return string representing the matrix
+	 */
 	protected static String matrixToString(Matrix M) {
 		StringBuilder res = new StringBuilder("[\n");
 		for (double[] row : M.getArray()) {
@@ -363,6 +427,11 @@ public class Kinematics {
 		return res.toString();
 	}
 
+	/**
+	 * Converts a matrix (vector) into an integer array, rounding
+	 * to the nearest integer.
+	 * @param vector the vector to convert.
+	 */
 	private static int[] toIntArray(Matrix vector) {
 		double[] array = vector.getColumnPackedCopy();
 		int[] result = new int[array.length];
@@ -377,9 +446,8 @@ public class Kinematics {
 	 * values
 	 * 
 	 * @param error
-	 * @param angles
-	 *            , in radians
-	 * @return
+	 * @param angles rotation amount in radians
+	 * @return one step update amount for the numerical step.
 	 */
 	public static Matrix getInverseNumerical2DStep(Matrix error, Matrix angles) {
 		// Perturb the angle to avoid singular points
