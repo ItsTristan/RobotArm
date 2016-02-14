@@ -17,7 +17,7 @@ public class RobotController {
 	private static RegulatedMotor m_motorB;
 	private static RegulatedMotor m_motorC;
 
-	private static final int defaultDelay = 0;
+	private static final int defaultDelay = 100;
 	private static final int motor_speed = 60;
 	private static final int motor_accel = 20;
 	
@@ -186,10 +186,7 @@ public class RobotController {
 			} else if (theta[i] < -180) {
 				theta[i] += 360;
 			}
-			System.out.println("theta" + i + ": " + theta[i]);
-			System.out.println("tacho" + i + ": " + (theta[i]/gear_ratios[i]));
 		}
-		Delay.msDelay(5000);
 
 		motorA.rotateTo((int) ( theta[0] / gear_ratios[0]),true);
 		motorB.rotateTo((int) ( theta[1] / gear_ratios[1]),false);	// last one should be false
