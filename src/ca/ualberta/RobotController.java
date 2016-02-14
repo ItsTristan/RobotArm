@@ -174,6 +174,7 @@ public class RobotController {
 	 * the default delay amount. You do not need to account for
 	 * the gear ratios when calling this function.
 	 * @param theta the amount to rotate each joint to, in degrees.
+	 * */
 	public static void rotateTo(int[] theta) {
 		rotateTo(theta, defaultDelay);
 	}

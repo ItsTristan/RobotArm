@@ -73,15 +73,15 @@ public class Kinematics {
 	}
 
 	/**
-	 * finds center point of the circle given only 3 points on that circle(so
-	 * any arc)
+	 * finds center point of a circle given only 3 points on 
+	 * that circle(so any arc with end points a and c)
 	 * 
 	 * @param a
-	 *            leftmost point
+	 *            start point of arc
 	 * @param b
 	 *            a point on the arc between a and b
 	 * @param c
-	 *            rightmost point
+	 *            end point of arc
 	 * @return center of circle
 	 */
 	// see math reference: http://www.regentsprep.org/regents/math/geometry/gcg6/RCir.htm
@@ -500,22 +500,6 @@ public class Kinematics {
 		points[resolution] = end;
 
 		return points;
-	}
-
-	/**
-	 * Given n points, returns a list of target points for the robot to move
-	 * towards along an arc, or null if the target has been reached.
-	 * 
-	 * @param current
-	 * @param start
-	 * @param mid
-	 * @param end
-	 * @param resolution
-	 * @return
-	 */
-	public static Point3D[] createArcPath(Point3D current, Point3D points[],
-			int resolution) {
-		return null;
 	}
 
 	/**

@@ -206,7 +206,11 @@ public class Main {
 		}
 		out.close();
 	}	
-		
+	/**Traces a maze by having user select key corner points with the arm using EV3touchSensor
+	 * and then drawing a line between each point from the start.
+	 * 	
+	 * @returns the list of points on the path
+	 */
 	private static Point3D[] traceMaze(){
 		int max_nodes = 30;
 		Point3D[] path = getSensorPoints(max_nodes);
@@ -296,7 +300,11 @@ public class Main {
 		touchSensor = null;
 		return points;
 	}
-	
+	/** Prints to the brick the angle between two intersecting lines after getting the 
+	 * point of intersection, a point on one line, and a point on the other line. 
+	 * Points are selected by user.
+	 * @return void
+	 */
 	private static void doAngleBWlines() {
 		Point3D[] cba = getSensorPoints(3);
 		int angle = Kinematics.getAngleBWlines(cba[0], cba[1], cba[2]);
@@ -304,6 +312,12 @@ public class Main {
 		Button.waitForAnyPress();
 	}
 
+	/**Prints the point of the end effector after being given the angles of each arm link
+	 * and moves the robot arm to that point.
+	 * 
+	 * @param angleA angle for arm link 1
+	 * @param angleB angle for arm link 2
+	 */
 	private static void doForward2DbyAngle(int angleA, int angleB) {
 		//print starting location
 		Point3D p = RobotController.getLocation();
@@ -316,6 +330,10 @@ public class Main {
 		System.out.format("x = %f \ny= %f\n", p.x,p.y);
 	}
 
+	/**
+	 * Aids forward kinematics by enabling point selection by hand and reporting the
+	 * point selected by the robot arm end effector.
+	 */
 	private static void testFWDByHand() {
 		while (true) {
 			Point3D[] p = getSensorPoints(1);	
