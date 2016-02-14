@@ -132,8 +132,11 @@ public class Kinematics {
 		double r = target.x * target.x + target.y * target.y;
 		double l1 = link_lengths[0];
 		double l2 = link_lengths[1];
+		
 		// if absolute value of r-l1*l1-l2*l2 is greater than one---> NAN
 		// so only valid for points in: 30 < sqrt(x^2+y^2) < 240
+		// Invalid for 3D inverse kinematics, so zero out the last entry
+		angles[2] = 0;
 		angles[1] = Math.acos((r - l1 * l1 - l2 * l2) / (2 * l1 * l2));
 		angles[0] = Math.asin(-l2 * Math.sin(angles[1]) / (Math.sqrt(r)))
 				+ Math.atan2(target.y, target.x);
@@ -144,8 +147,7 @@ public class Kinematics {
 		}
 		// System.out.format("theta[1]= %d \ntheta[0]= %d\n", theta[1],
 		// theta[0]);
-		// Invalid for 3D inverse kinematics, so zero out the last entry
-		angles[2] = 0;
+		
 		return theta;
 	}
 
