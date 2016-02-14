@@ -22,6 +22,10 @@ public class TestKinematics extends Kinematics {
 	public void setUp() throws Exception {
 	}
 
+	/**
+	 * Tests the forward kinematics functionality. Tests are verified by
+	 * hand using basic geometry.
+	 */
 	@Test
 	public void testForwardKinematics() {
 	
@@ -75,16 +79,14 @@ public class TestKinematics extends Kinematics {
 		Assert.assertTrue("expected: "+target+", got: "+actual,
 				target.distance(actual) <= 2);
 		
-//		int[] test = inverseNumericalKinematics(new Point3D(150,100,50), new int[] {0,0,0});
-//		actual = forwardKinematics(test);
-//		target = new Point3D(150,100,50);
-//		Assert.assertTrue("expected: "+target+", got: "+actual,
-//				target.distance(actual) <= 2);
-		
 		actual = forwardKinematics(inverseNumericalKinematics(new Point3D(150,0,50), new int[]{0,0,0}));
 		System.out.println(actual);
 	}
 	
+	/**
+	 * Tests the 2D analytic solution using the same tests as forward kinematics,
+	 * but in reverse.
+	 */
 	@Test
 	public void testInverseAnalyticKinematics() {
 		// Stupid case
@@ -120,6 +122,10 @@ public class TestKinematics extends Kinematics {
 				new int[]{9,109,0});
 	}
 	
+	/**
+	 * Tests the inverse numeric kinematics using the same tests as forward
+	 * kinematics, but in reverse.
+	 */
 	@Test
 	public void testInverseNumericalKinematics() {
 		// Loop to check for consistency
@@ -172,7 +178,8 @@ public class TestKinematics extends Kinematics {
 	}
 
 	/**
-	 * Asserts that the analytic solution is close enough
+	 * Asserts that the analytic solution is close enough,
+	 * where "close enough" is defined by the dist_threshold constant
 	 * @param target
 	 * @param expected
 	 */
@@ -181,7 +188,8 @@ public class TestKinematics extends Kinematics {
 		checkInverse(target, expected, actual);
 	}
 	/**
-	 * Asserts that the numerical solution is close enough
+	 * Asserts that the numerical solution is close enough,
+	 * where "close enough" is defined by the dist_threshold constant
 	 * @param target
 	 * @param expected
 	 * @param hint
@@ -205,6 +213,10 @@ public class TestKinematics extends Kinematics {
 				where.distance(target) <= dist_thresh);
 	}
 	
+	/**
+	 * Tests discretization of the line path but checking that
+	 * each step is within some distance threshold of each other.
+	 */
 	@Test
 	public void testStepping() {
 		int[] theta = new int[]{0,0,0};
@@ -229,6 +241,10 @@ public class TestKinematics extends Kinematics {
 		Assert.assertTrue(forwardKinematics(theta).distance(final_location) <= dist_thresh);
 	}
 
+	/**
+	 * Prints an array of integers in a convenient way.
+	 * @param array
+	 */
 	private String print(int[] array) {
 		StringBuilder result = new StringBuilder();
 		String sep = "";
