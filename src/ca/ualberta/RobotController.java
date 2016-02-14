@@ -11,6 +11,10 @@ import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.utility.Delay;
 
+/**
+ * Provides convenience functions for moving the robot and abstracts
+ * away the hardware from other classes.
+ */
 public class RobotController {
 	
 	private static RegulatedMotor m_motorA;
@@ -25,13 +29,17 @@ public class RobotController {
 
 	private static EV3TouchSensor touchSensor;
 	
+	/**
+	 * Initializes the motor tacho counts. This should be called
+	 * before anything else to make sure that the motors are ready to move.
+	 */
 	public static void initializeMotorZero() {
 		getMotorA().resetTachoCount();
 		getMotorB().resetTachoCount();
 	}
 	
 	/***
-	 * Relaxes motors to be manipulated by hand again
+	 * Relaxes motors to be manipulated by hand again.
 	 */
 	public static void relaxMotors() {
 		RegulatedMotor motorA = getMotorA();
@@ -40,6 +48,11 @@ public class RobotController {
 		motorB.flt();
 	}
 	
+	/**
+	 * Moves the arms to the 0 position, powers off the motors
+	 * and releases the resources. Any calls to getMotorX after
+	 * this call will reopen the port.
+	 */
 	public static void resetMotors() {
 		System.out.println("Resetting...");
 		rotateTo(new int[] {0,0,0}, 300);
@@ -156,16 +169,21 @@ public class RobotController {
 		rotateTo(theta);
 	}
 	
+	/**
+	 * Rotates the joints to the given angles, using
+	 * the default delay amount. You do not need to account for
+	 * the gear ratios when calling this function.
+	 * @param theta the amount to rotate each joint to, in degrees.
 	public static void rotateTo(int[] theta) {
 		rotateTo(theta, defaultDelay);
 	}
 	
 	/**
-	 * Rotates the joints to the given angles, returning
-	 * the point of the end effector
-	 * @param theta
-	 * @param delay
-	 * @return
+	 * Rotates the joints to the given angles, delaying
+	 * afterwards to make sure the math is alright. You do not need
+	 * to account for the gear ratios when calling this function.
+	 * @param theta the amount to rotate each joint to, in degrees
+	 * @param delay number of milliseconds to wait after the motors start moving.
 	 */
 	public static void rotateTo(int[] theta, int delay) {
 		RegulatedMotor motorA = getMotorA();
@@ -188,6 +206,8 @@ public class RobotController {
 			}
 		}
 
+		// Setting the second argument to false prevents program execution
+		// from continuing until the motor has stopped.
 		motorA.rotateTo((int) ( theta[0] / gear_ratios[0]),true);
 		motorB.rotateTo((int) ( theta[1] / gear_ratios[1]),false);	// last one should be false
 		
@@ -209,12 +229,17 @@ public class RobotController {
 		return Kinematics.forwardKinematics(getJointAngles());
 	}
 	
+	/**
+	 * Returns the current location of the end effector,
+	 * accounting for the gear ratios, and in 3D.
+	 */
 	public static Point3D getLocation3() {
 		return Kinematics.forwardKinematics(getJointAngles3());
 	}
 
 	/**
 	 * Returns the current joint angles, accounting for the gear ratios.
+	 * If you need motorC's angle, use getJointAngles3()
 	 * @return
 	 */
 	public static int[] getJointAngles() {
@@ -225,6 +250,7 @@ public class RobotController {
 	}
 	/**
 	 * Returns the current joint angles, accounting for the gear ratios.
+	 * Also includes motorC.
 	 * @return
 	 */
 	public static int[] getJointAngles3() {
@@ -269,21 +295,33 @@ public class RobotController {
 		}
 	}
 	
+	/**
+	 * Gets motorA as a singleton. Prevents the port from being opened twice.
+	 */
 	private static RegulatedMotor getMotorA() {
 		if (m_motorA == null)
 			m_motorA = new EV3LargeRegulatedMotor(MotorPort.A);
 		return m_motorA;
 	}
+	/**
+	 * Gets motorB as a singleton. Prevents the port from being opened twice.
+	 */
 	private static RegulatedMotor getMotorB() {
 		if (m_motorB == null)
 			m_motorB = new EV3LargeRegulatedMotor(MotorPort.B);
 		return m_motorB;
 	}
+	/**
+	 * Gets motorC as a singleton. Prevents the port from being opened twice.
+	 */
 	private static RegulatedMotor getMotorC() {
 		if (m_motorC == null)
 			m_motorC = new EV3LargeRegulatedMotor(MotorPort.C);
 		return m_motorC;
 	}
+	/**
+	 * Gets the touch sensor as a singleton. Prevents the port from being opened twice.
+	 */
 	private static EV3TouchSensor getTouchSensor() {
 		if (touchSensor == null) {
 			touchSensor = new EV3TouchSensor(SensorPort.S1);
