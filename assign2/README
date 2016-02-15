@@ -1,0 +1,22 @@
+Robot Arm
+=========
+CMPUT 412
+Authors: Falon Scheers, Tristan Meleshko
+
+Compile the program in Eclipse with the LeJOS EV3 plugin. It is tested on version 8.1-beta.
+No other special software considerations need to be made. The robot arm needs to be configured as follows:
+  * Motor A to Motor B: 135 mm
+  * Motor B to Motor C: 105 mm
+  * Motor C to Effector: 85 mm
+
+Motor A has z-axis pointing up, with a 2:1 gear reduction.
+Motor B has z-axis pointing up, parallel to Motor A.
+Motor C has z-axis pointing forward, centre is 85 mm above the ground.
+
+When the program is run, a menu will be presented. Select an option using the up and down buttons,
+and the middle button to select. Press back to quit.
+To select points, press the touch sensor. It needs to be held for about a third of a second
+to register. To end selecting points, press then middle button. You can also interrupt the program
+at any time by pressing the Down and Middle buttons at the same time.
+
+There is a JUnit file named TestKinematics.java which is used to test the math for the Kinematics.
